@@ -28,18 +28,15 @@ export default function Preview() {
   const isFavorited = favorites.includes(id);
 
   const toggleFavorite = () => {
-    const onMutate = () => {
-      // Optimistic update
-      queryClient.setQueryData(['/api/favorites'], (old: number[] = []) => 
-        isFavorited ? old.filter(fid => fid !== id) : [...old, id]
-      );
-    };
+    // Optimistic update before mutation
+    queryClient.setQueryData(['/api/favorites'], (old: number[] = []) =>
+      isFavorited ? old.filter(fid => fid !== id) : [...old, id]
+    );
 
     if (isFavorited) {
-      removeFav.mutate({ wallpaperId: id }, { onMutate });
+      removeFav.mutate({ wallpaperId: id });
     } else {
-      addFav.mutate({ wallpaperId: id }, { onMutate });
-      // Heart pulse effect could be added here via state
+      addFav.mutate({ wallpaperId: id });
     }
   };
 
