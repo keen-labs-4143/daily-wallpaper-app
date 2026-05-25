@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { MobileContainer } from "@/components/layout/mobile-container";
-import { BottomNav } from "@/components/layout/bottom-nav";
 import { FeedCard } from "@/components/wallpaper/feed-card";
 import {
   useListWallpapers,
@@ -178,7 +177,6 @@ export default function Today() {
         </div>
       </div>
 
-      <BottomNav />
     </MobileContainer>
   );
 }

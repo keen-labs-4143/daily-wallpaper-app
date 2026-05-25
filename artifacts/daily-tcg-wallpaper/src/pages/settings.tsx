@@ -1,6 +1,5 @@
 import React from "react";
 import { MobileContainer } from "@/components/layout/mobile-container";
-import { BottomNav } from "@/components/layout/bottom-nav";
 import { Bell, Palette, Clock, Info, Star, ChevronRight, Tag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
@@ -68,7 +67,6 @@ export default function Settings() {
           <p className="text-xs text-white/30">Crafted with care in San Francisco.</p>
         </div>
       </div>
-      <BottomNav />
     </MobileContainer>
   );
 }

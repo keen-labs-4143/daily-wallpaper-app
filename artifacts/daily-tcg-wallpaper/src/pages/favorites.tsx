@@ -2,7 +2,6 @@ import React from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { MobileContainer } from "@/components/layout/mobile-container";
-import { BottomNav } from "@/components/layout/bottom-nav";
 import { WallpaperCard } from "@/components/wallpaper/wallpaper-card";
 import { useListWallpapers, useListFavorites, getListWallpapersQueryKey, getListFavoritesQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -55,7 +54,6 @@ export default function Favorites() {
           </div>
         )}
       </div>
-      <BottomNav />
     </MobileContainer>
   );
 }
