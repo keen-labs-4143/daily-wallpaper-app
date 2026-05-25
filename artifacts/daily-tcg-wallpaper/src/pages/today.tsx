@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { MobileContainer } from "@/components/layout/mobile-container";
+import { SideDrawer } from "@/components/layout/side-drawer";
 import { FeedCard } from "@/components/wallpaper/feed-card";
 import {
   useListWallpapers,
@@ -14,13 +15,14 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
 import { COMMUNITY_WALLPAPERS } from "@/data/community-wallpapers";
-import { Layers } from "lucide-react";
+import { Layers, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Tab = "week" | "collection" | "community";
 
 export default function Today() {
   const [activeTab, setActiveTab] = useState<Tab>("week");
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
 
@@ -57,10 +59,19 @@ export default function Today() {
 
   return (
     <MobileContainer>
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        <SideDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+
         {/* Header */}
-        <div className="pt-12 px-5 pb-0 flex-shrink-0">
-          <h1 className="text-2xl font-serif font-bold text-white tracking-tight">
+        <div className="pt-12 px-5 pb-0 flex-shrink-0 flex items-center gap-3">
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="p-1.5 -ml-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/8 transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu size={24} />
+          </button>
+          <h1 className="text-xl font-serif font-bold text-white tracking-tight">
             Daily TCG Wallpaper
           </h1>
         </div>
