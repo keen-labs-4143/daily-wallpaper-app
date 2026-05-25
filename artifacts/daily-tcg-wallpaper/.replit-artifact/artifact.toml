@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Daily TCG Wallpaper"
+version = "1.0.0"
+id = "artifacts/daily-tcg-wallpaper"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23930
+
+[services.development]
+run = "pnpm --filter @workspace/daily-tcg-wallpaper run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/daily-tcg-wallpaper", "run", "build" ]
+publicDir = "artifacts/daily-tcg-wallpaper/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23930"
+BASE_PATH = "/"

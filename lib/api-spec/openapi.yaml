@@ -1,15 +1,18 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Daily TCG Wallpaper API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: wallpapers
+    description: Wallpaper operations
+  - name: favorites
+    description: Favorites operations
 paths:
   /healthz:
     get:
@@ -24,6 +27,113 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /wallpapers:
+    get:
+      operationId: listWallpapers
+      tags: [wallpapers]
+      summary: List all wallpapers
+      description: Returns all 20 wallpaper items
+      responses:
+        "200":
+          description: List of wallpapers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Wallpaper"
+
+  /wallpapers/today:
+    get:
+      operationId: getTodayWallpaper
+      tags: [wallpapers]
+      summary: Get today's featured wallpaper
+      description: Returns the wallpaper designated for today
+      responses:
+        "200":
+          description: Today's wallpaper
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallpaper"
+
+  /wallpapers/{id}:
+    get:
+      operationId: getWallpaper
+      tags: [wallpapers]
+      summary: Get a wallpaper by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Wallpaper details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallpaper"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /favorites:
+    get:
+      operationId: listFavorites
+      tags: [favorites]
+      summary: List favorited wallpapers
+      responses:
+        "200":
+          description: List of favorited wallpaper IDs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: integer
+
+  /favorites/{wallpaperId}:
+    post:
+      operationId: addFavorite
+      tags: [favorites]
+      summary: Add wallpaper to favorites
+      parameters:
+        - name: wallpaperId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Favorited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FavoriteResult"
+    delete:
+      operationId: removeFavorite
+      tags: [favorites]
+      summary: Remove wallpaper from favorites
+      parameters:
+        - name: wallpaperId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Removed from favorites
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FavoriteResult"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +144,50 @@ components:
       required:
         - status
 
+    Wallpaper:
+      type: object
+      required:
+        - id
+        - title
+        - mood
+        - style
+        - imageUrl
+        - isPremium
+        - releaseDate
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        mood:
+          type: string
+          description: "Emotional tone e.g. Ethereal, Fierce, Serene, Mystic"
+        style:
+          type: string
+          description: "Visual style e.g. Holographic, Dark Fantasy, Neon Arcane, Celestial"
+        imageUrl:
+          type: string
+        isPremium:
+          type: boolean
+        releaseDate:
+          type: string
+          description: ISO date string
+
+    FavoriteResult:
+      type: object
+      required:
+        - wallpaperId
+        - favorited
+      properties:
+        wallpaperId:
+          type: integer
+        favorited:
+          type: boolean
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
