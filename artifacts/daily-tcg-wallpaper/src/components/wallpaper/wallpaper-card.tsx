@@ -1,7 +1,6 @@
 import React from "react";
 import { generateGradient } from "@/lib/generateGradient";
 import { ShimmerEffect } from "./shimmer-effect";
-import { Lock, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface WallpaperCardProps {
@@ -9,13 +8,11 @@ interface WallpaperCardProps {
   title: string;
   mood: string;
   style: string;
-  isPremium?: boolean;
   shimmer?: boolean;
   className?: string;
-  locked?: boolean;
 }
 
-export function WallpaperCard({ id, title, mood, style, isPremium, shimmer, className, locked }: WallpaperCardProps) {
+export function WallpaperCard({ id, title, mood, style, shimmer, className }: WallpaperCardProps) {
   const gradient = generateGradient(mood, style, id);
 
   return (
@@ -27,7 +24,7 @@ export function WallpaperCard({ id, title, mood, style, isPremium, shimmer, clas
       style={{ background: gradient }}
     >
       <ShimmerEffect active={shimmer}>
-        <div className={cn("absolute inset-0 flex flex-col justify-end p-6", locked && "blur-md scale-105")}>
+        <div className="absolute inset-0 flex flex-col justify-end p-6">
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
           <div className="relative z-10">
             <h3 className="text-2xl font-serif font-bold text-white mb-2 leading-tight drop-shadow-md">
@@ -44,17 +41,6 @@ export function WallpaperCard({ id, title, mood, style, isPremium, shimmer, clas
           </div>
         </div>
       </ShimmerEffect>
-
-      {isPremium && locked && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center mb-4 border border-accent/30 shadow-[0_0_30px_rgba(255,183,0,0.3)]">
-            <Lock className="w-8 h-8 text-accent" />
-          </div>
-          <p className="text-white font-serif font-bold text-lg flex items-center gap-2">
-            Premium Drop <Crown className="w-4 h-4 text-accent" />
-          </p>
-        </div>
-      )}
     </div>
   );
 }

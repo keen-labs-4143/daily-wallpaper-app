@@ -19,8 +19,8 @@ export default function Favorites() {
   return (
     <MobileContainer>
       <div className="flex-1 overflow-y-auto pb-32 no-scrollbar px-6 pt-12">
-        <h1 className="text-4xl font-serif font-bold text-white mb-2">Collection</h1>
-        <p className="text-white/50 mb-8 font-medium">{favoriteCards.length} saved artifacts</p>
+        <h1 className="text-4xl font-serif font-bold text-white mb-2">Saved</h1>
+        <p className="text-white/50 mb-8 font-medium">{favoriteCards.length} wallpapers</p>
 
         {isLoading ? (
           <div className="grid grid-cols-2 gap-4">
@@ -29,8 +29,8 @@ export default function Favorites() {
         ) : favoriteCards.length === 0 ? (
           <div className="flex flex-col items-center justify-center mt-32 text-center opacity-50">
             <BookmarkMinus size={48} className="mb-4" />
-            <p className="text-lg font-medium">Your collection is empty</p>
-            <p className="text-sm">Save daily drops to build your gallery.</p>
+            <p className="text-lg font-medium">Nothing saved yet</p>
+            <p className="text-sm">Tap the heart on any wallpaper to save it here.</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4">

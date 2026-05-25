@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, useLocation } from "wouter";
+import React from "react";
+import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { MobileContainer } from "@/components/layout/mobile-container";
 import { BottomNav } from "@/components/layout/bottom-nav";
@@ -53,7 +53,7 @@ export default function Today() {
             {isLoading || !wallpaper ? (
               <Skeleton className="w-full aspect-[9/16] rounded-3xl bg-white/5" />
             ) : (
-              <div 
+              <div
                 className="cursor-pointer active:scale-[0.98] transition-transform duration-300"
                 onClick={() => setLocation(`/preview/${wallpaper.id}`)}
               >
@@ -62,22 +62,20 @@ export default function Today() {
                   title={wallpaper.title}
                   mood={wallpaper.mood}
                   style={wallpaper.style}
-                  isPremium={wallpaper.isPremium}
                   shimmer={true}
-                  locked={wallpaper.isPremium}
                 />
               </div>
             )}
-            
+
             <div className="mt-8 grid grid-cols-2 gap-4">
-              <Button 
+              <Button
                 onClick={handleDownload}
-                variant="outline" 
+                variant="outline"
                 className="h-12 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 text-white"
               >
                 <Download className="mr-2 h-4 w-4" /> Save
               </Button>
-              <Button 
+              <Button
                 onClick={handleSetWallpaper}
                 className="h-12 rounded-xl bg-primary hover:bg-primary/90 text-white shadow-[0_0_15px_rgba(139,92,246,0.3)]"
               >

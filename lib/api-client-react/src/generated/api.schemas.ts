@@ -12,12 +12,11 @@ export interface HealthStatus {
 export interface Wallpaper {
   id: number;
   title: string;
-  /** Emotional tone e.g. Ethereal, Fierce, Serene, Mystic */
+  /** Visual tone e.g. Dark, Warm, Moody, Vibrant, Cool */
   mood: string;
-  /** Visual style e.g. Holographic, Dark Fantasy, Neon Arcane, Celestial */
+  /** Visual style e.g. Holographic, Minimal, Neon, Gradient, Cinematic */
   style: string;
   imageUrl: string;
-  isPremium: boolean;
   /** ISO date string */
   releaseDate: string;
 }

@@ -7,7 +7,6 @@ import Onboarding from "@/pages/onboarding";
 import Today from "@/pages/today";
 import Preview from "@/pages/preview";
 import Favorites from "@/pages/favorites";
-import Premium from "@/pages/premium";
 import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 import RouteGuard from "@/components/layout/route-guard";
@@ -30,7 +29,6 @@ function Router() {
         <Route path="/today" component={Today} />
         <Route path="/preview/:id" component={Preview} />
         <Route path="/favorites" component={Favorites} />
-        <Route path="/premium" component={Premium} />
         <Route path="/settings" component={Settings} />
         <Route component={NotFound} />
       </Switch>

@@ -1,4 +1,4 @@
-import { pgTable, serial, text, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -8,7 +8,6 @@ export const wallpapersTable = pgTable("wallpapers", {
   mood: text("mood").notNull(),
   style: text("style").notNull(),
   imageUrl: text("image_url").notNull(),
-  isPremium: boolean("is_premium").notNull().default(false),
   releaseDate: text("release_date").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

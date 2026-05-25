@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { Calendar, Heart, Crown, Settings } from "lucide-react";
+import { Calendar, Heart, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function BottomNav() {
@@ -9,7 +9,6 @@ export function BottomNav() {
   const tabs = [
     { name: "Today", path: "/today", icon: Calendar },
     { name: "Favorites", path: "/favorites", icon: Heart },
-    { name: "Premium", path: "/premium", icon: Crown },
     { name: "Settings", path: "/settings", icon: Settings },
   ];
 

@@ -152,7 +152,6 @@ components:
         - mood
         - style
         - imageUrl
-        - isPremium
         - releaseDate
       properties:
         id:
@@ -161,14 +160,12 @@ components:
           type: string
         mood:
           type: string
-          description: "Emotional tone e.g. Ethereal, Fierce, Serene, Mystic"
+          description: "Visual tone e.g. Dark, Warm, Moody, Vibrant, Cool"
         style:
           type: string
-          description: "Visual style e.g. Holographic, Dark Fantasy, Neon Arcane, Celestial"
+          description: "Visual style e.g. Holographic, Minimal, Neon, Gradient, Cinematic"
         imageUrl:
           type: string
-        isPremium:
-          type: boolean
         releaseDate:
           type: string
           description: ISO date string

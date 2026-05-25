@@ -24,10 +24,9 @@ export const HealthCheckResponse = zod.object({
 export const ListWallpapersResponseItem = zod.object({
   "id": zod.number(),
   "title": zod.string(),
-  "mood": zod.string().describe('Emotional tone e.g. Ethereal, Fierce, Serene, Mystic'),
-  "style": zod.string().describe('Visual style e.g. Holographic, Dark Fantasy, Neon Arcane, Celestial'),
+  "mood": zod.string().describe('Visual tone e.g. Dark, Warm, Moody, Vibrant, Cool'),
+  "style": zod.string().describe('Visual style e.g. Holographic, Minimal, Neon, Gradient, Cinematic'),
   "imageUrl": zod.string(),
-  "isPremium": zod.boolean(),
   "releaseDate": zod.string().describe('ISO date string')
 })
 export const ListWallpapersResponse = zod.array(ListWallpapersResponseItem)
@@ -40,10 +39,9 @@ export const ListWallpapersResponse = zod.array(ListWallpapersResponseItem)
 export const GetTodayWallpaperResponse = zod.object({
   "id": zod.number(),
   "title": zod.string(),
-  "mood": zod.string().describe('Emotional tone e.g. Ethereal, Fierce, Serene, Mystic'),
-  "style": zod.string().describe('Visual style e.g. Holographic, Dark Fantasy, Neon Arcane, Celestial'),
+  "mood": zod.string().describe('Visual tone e.g. Dark, Warm, Moody, Vibrant, Cool'),
+  "style": zod.string().describe('Visual style e.g. Holographic, Minimal, Neon, Gradient, Cinematic'),
   "imageUrl": zod.string(),
-  "isPremium": zod.boolean(),
   "releaseDate": zod.string().describe('ISO date string')
 })
 
@@ -58,10 +56,9 @@ export const GetWallpaperParams = zod.object({
 export const GetWallpaperResponse = zod.object({
   "id": zod.number(),
   "title": zod.string(),
-  "mood": zod.string().describe('Emotional tone e.g. Ethereal, Fierce, Serene, Mystic'),
-  "style": zod.string().describe('Visual style e.g. Holographic, Dark Fantasy, Neon Arcane, Celestial'),
+  "mood": zod.string().describe('Visual tone e.g. Dark, Warm, Moody, Vibrant, Cool'),
+  "style": zod.string().describe('Visual style e.g. Holographic, Minimal, Neon, Gradient, Cinematic'),
   "imageUrl": zod.string(),
-  "isPremium": zod.boolean(),
   "releaseDate": zod.string().describe('ISO date string')
 })
 

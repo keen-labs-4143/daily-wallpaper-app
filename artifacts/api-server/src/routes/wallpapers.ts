@@ -16,7 +16,6 @@ router.get("/wallpapers", async (req, res) => {
       mood: w.mood,
       style: w.style,
       imageUrl: w.imageUrl,
-      isPremium: w.isPremium,
       releaseDate: w.releaseDate,
     }));
     res.json(mapped);
@@ -44,7 +43,6 @@ router.get("/wallpapers/today", async (req, res) => {
       mood: picked.mood,
       style: picked.style,
       imageUrl: picked.imageUrl,
-      isPremium: picked.isPremium,
       releaseDate: today,
     });
   } catch (err) {
@@ -74,7 +72,6 @@ router.get("/wallpapers/:id", async (req, res) => {
       mood: wallpaper.mood,
       style: wallpaper.style,
       imageUrl: wallpaper.imageUrl,
-      isPremium: wallpaper.isPremium,
       releaseDate: wallpaper.releaseDate,
     });
   } catch (err) {
