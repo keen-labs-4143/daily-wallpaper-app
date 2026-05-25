@@ -26,11 +26,8 @@ const WALLPAPERS = [
 const today = new Date().toISOString().slice(0, 10);
 
 async function seed() {
-  const existing = await db.select().from(wallpapersTable);
-  if (existing.length > 0) {
-    console.log(`Skipping seed — ${existing.length} wallpapers already exist.`);
-    process.exit(0);
-  }
+  // Always replace all wallpapers so metadata stays canonical
+  await db.delete(wallpapersTable);
 
   const rows = WALLPAPERS.map((w) => ({
     title: w.title,

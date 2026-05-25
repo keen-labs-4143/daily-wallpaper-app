@@ -1,7 +1,7 @@
 import React from "react";
 import { MobileContainer } from "@/components/layout/mobile-container";
 import { BottomNav } from "@/components/layout/bottom-nav";
-import { Bell, Palette, Clock, Info, Star, ChevronRight, Crown } from "lucide-react";
+import { Bell, Palette, Clock, Info, Star, ChevronRight, Tag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 
@@ -61,7 +61,7 @@ export default function Settings() {
           <div onClick={handleLink} className="cursor-pointer">
             <Item icon={Info} title="Privacy Policy" right={<ChevronRight size={18} />} />
           </div>
-          <Item icon={Crown} title="Version" right={<span className="text-sm font-mono">1.0.0</span>} />
+          <Item icon={Tag} title="Version" right={<span className="text-sm font-mono">1.0.0</span>} />
         </Section>
         
         <div className="text-center mt-12 mb-8">
