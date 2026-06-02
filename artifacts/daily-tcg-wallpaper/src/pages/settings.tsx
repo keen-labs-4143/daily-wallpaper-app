@@ -1,11 +1,13 @@
 import React from "react";
+import { useLocation } from "wouter";
 import { MobileContainer } from "@/components/layout/mobile-container";
-import { Bell, Palette, Clock, Info, Star, ChevronRight, Tag } from "lucide-react";
+import { Bell, Palette, Clock, Info, Star, ChevronRight, Tag, ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 
 export default function Settings() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const handleLink = () => {
     toast({ description: "Opening link..." });
@@ -33,7 +35,16 @@ export default function Settings() {
   return (
     <MobileContainer>
       <div className="flex-1 overflow-y-auto pb-32 no-scrollbar px-4 pt-12">
-        <h1 className="text-3xl font-serif font-bold text-white mb-8 px-2">Settings</h1>
+        <div className="flex items-center gap-3 mb-8 px-2">
+          <button
+            onClick={() => setLocation("/today")}
+            className="p-1.5 -ml-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/8 transition-colors"
+            aria-label="Go back"
+          >
+            <ChevronLeft size={24} />
+          </button>
+          <h1 className="text-3xl font-serif font-bold text-white">Settings</h1>
+        </div>
 
         <Section title="Preferences">
           <Item 

@@ -5,7 +5,7 @@ import { MobileContainer } from "@/components/layout/mobile-container";
 import { WallpaperCard } from "@/components/wallpaper/wallpaper-card";
 import { useListWallpapers, useListFavorites, getListWallpapersQueryKey, getListFavoritesQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookmarkMinus } from "lucide-react";
+import { BookmarkMinus, ChevronLeft } from "lucide-react";
 
 export default function Favorites() {
   const [, setLocation] = useLocation();
@@ -18,8 +18,17 @@ export default function Favorites() {
   return (
     <MobileContainer>
       <div className="flex-1 overflow-y-auto pb-32 no-scrollbar px-6 pt-12">
-        <h1 className="text-4xl font-serif font-bold text-white mb-2">Saved</h1>
-        <p className="text-white/50 mb-8 font-medium">{favoriteCards.length} wallpapers</p>
+        <div className="flex items-center gap-3 mb-2 -ml-1.5">
+          <button
+            onClick={() => setLocation("/today")}
+            className="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/8 transition-colors"
+            aria-label="Go back"
+          >
+            <ChevronLeft size={24} />
+          </button>
+          <h1 className="text-4xl font-serif font-bold text-white">Saved</h1>
+        </div>
+        <p className="text-white/50 mb-8 font-medium pl-1">{favoriteCards.length} wallpapers</p>
 
         {isLoading ? (
           <div className="grid grid-cols-2 gap-4">
