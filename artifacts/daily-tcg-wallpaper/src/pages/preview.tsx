@@ -109,7 +109,7 @@ export default function Preview() {
           initial={{ opacity: 0, x: -12 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.15, duration: 0.3 }}
-          onClick={() => setLocation("/today")}
+          onClick={() => window.history.back()}
           className="absolute top-12 left-4 z-20 w-10 h-10 rounded-full bg-black/30 backdrop-blur-xl flex items-center justify-center text-white border border-white/15 active:scale-90 transition-transform"
           aria-label="Go back"
         >

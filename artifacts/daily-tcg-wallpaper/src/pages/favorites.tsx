@@ -26,7 +26,7 @@ export default function Favorites() {
           >
             <ChevronLeft size={24} />
           </button>
-          <h1 className="text-4xl font-serif font-bold text-white">Saved</h1>
+          <h1 className="text-4xl font-serif font-bold text-white">Favorites</h1>
         </div>
         <p className="text-white/50 mb-8 font-medium pl-1">{favoriteCards.length} wallpapers</p>
 
@@ -56,6 +56,7 @@ export default function Favorites() {
                   title={card.title}
                   mood={card.mood}
                   style={card.style}
+                  imageUrl={card.imageUrl}
                   className="rounded-2xl shadow-lg border-white/5 hover:border-primary/50 transition-colors"
                 />
               </motion.div>
