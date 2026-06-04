@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { MobileContainer } from "@/components/layout/mobile-container";
+import { UpdateMethodSheet } from "@/components/settings/update-method-sheet";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronLeft, ChevronDown, ExternalLink, Search, LayoutGrid } from "lucide-react";
@@ -57,13 +58,16 @@ export default function Settings() {
   const [autoDownload, setAutoDownload] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [learnMoreOpen, setLearnMoreOpen] = useState(false);
 
   const comingSoon = (label: string) =>
     toast({ title: label, description: "This feature is coming soon." });
 
   return (
     <MobileContainer>
-      <div className="flex-1 overflow-y-auto pb-16 no-scrollbar">
+      <div className="flex-1 relative flex flex-col overflow-hidden">
+        <UpdateMethodSheet open={learnMoreOpen} onClose={() => setLearnMoreOpen(false)} />
+        <div className="flex-1 overflow-y-auto pb-16 no-scrollbar">
         {/* Header */}
         <div className="flex items-center gap-2 px-4 pt-12 pb-5">
           <button
@@ -95,7 +99,7 @@ export default function Settings() {
             <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/[0.06]">
               <p className="text-white font-medium text-[15px]">Update Method</p>
               <button
-                onClick={() => comingSoon("Update Method")}
+                onClick={() => setLearnMoreOpen(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 text-white/80 text-xs font-semibold hover:bg-white/15 transition-colors"
               >
                 <span className="w-3.5 h-3.5 rounded-full border border-white/60 flex items-center justify-center text-[9px] font-bold">i</span>
@@ -278,7 +282,8 @@ export default function Settings() {
           </p>
 
         </div>
-      </div>
+        </div>{/* end scrollable */}
+      </div>{/* end relative wrapper */}
     </MobileContainer>
   );
 }
