@@ -126,6 +126,7 @@ export default function Today() {
                         title={w.title}
                         mood={w.mood}
                         style={w.style}
+                        imageUrl={w.imageUrl}
                         subtitle={new Date(w.releaseDate).toLocaleDateString("en-US", {
                           month: "long",
                           day: "numeric",
@@ -175,6 +176,7 @@ export default function Today() {
                     title={w.title}
                     mood={w.mood}
                     style={w.style}
+                    imageUrl={w.imageUrl}
                     subtitle={`by ${w.author}`}
                     isFavorited={favorites.includes(w.id)}
                     onTap={() => {}}

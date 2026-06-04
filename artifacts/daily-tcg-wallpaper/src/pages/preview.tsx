@@ -84,9 +84,16 @@ export default function Preview() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
-        {/* Full-screen gradient wallpaper */}
+        {/* Full-screen wallpaper */}
         <div className="absolute inset-0 z-0" style={{ background: gradient }}>
-          <ShimmerEffect active={true}>
+          {wallpaper?.imageUrl && (
+            <img
+              src={wallpaper.imageUrl}
+              alt={wallpaper.title}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          )}
+          <ShimmerEffect active={isLoading}>
             <div className="absolute inset-0" />
           </ShimmerEffect>
         </div>

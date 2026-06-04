@@ -10,6 +10,7 @@ interface FeedCardProps {
   title: string;
   mood: string;
   style: string;
+  imageUrl?: string;
   subtitle?: string;
   shimmer?: boolean;
   isFavorited?: boolean;
@@ -23,6 +24,7 @@ export function FeedCard({
   title,
   mood,
   style,
+  imageUrl,
   subtitle,
   shimmer = false,
   isFavorited = false,
@@ -32,6 +34,7 @@ export function FeedCard({
 }: FeedCardProps) {
   const gradient = generateGradient(mood, style, id);
   const [heartAnimating, setHeartAnimating] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   const handleFavorite = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -39,6 +42,8 @@ export function FeedCard({
     setTimeout(() => setHeartAnimating(false), 400);
     onFavorite?.();
   };
+
+  const showImage = !!imageUrl && !imgError;
 
   return (
     <motion.div
@@ -53,7 +58,15 @@ export function FeedCard({
         className="w-full aspect-[3/4] relative overflow-hidden"
         style={{ background: gradient }}
       >
-        <ShimmerEffect active={shimmer}>
+        {showImage && (
+          <img
+            src={imageUrl}
+            alt={title}
+            onError={() => setImgError(true)}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )}
+        <ShimmerEffect active={shimmer && !showImage}>
           <div className="absolute inset-0" />
         </ShimmerEffect>
         {/* subtle vignette at bottom */}
