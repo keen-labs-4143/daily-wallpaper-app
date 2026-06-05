@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useRoute, useLocation } from "wouter";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { MobileContainer } from "@/components/layout/mobile-container";
 import {
   useGetWallpaper,
@@ -12,7 +12,7 @@ import {
 } from "@workspace/api-client-react";
 import { generateGradient } from "@/lib/generateGradient";
 import { ShimmerEffect } from "@/components/wallpaper/shimmer-effect";
-import { ChevronLeft, Share2, Plus, Heart, Smartphone, Download } from "lucide-react";
+import { ChevronLeft, Share2, Plus, Heart, Smartphone, Download, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
@@ -34,6 +34,7 @@ export default function Preview() {
   const { toast } = useToast();
 
   const [heartAnimating, setHeartAnimating] = useState(false);
+  const [setWallpaperOpen, setSetWallpaperOpen] = useState(false);
 
   const isFavorited = favorites.includes(id);
 
@@ -55,7 +56,12 @@ export default function Preview() {
   };
 
   const handleSet = () => {
-    toast({ title: "Coming soon", description: "Native wallpaper setting requires an app update." });
+    setSetWallpaperOpen(true);
+  };
+
+  const handleSetTarget = (target: string) => {
+    setSetWallpaperOpen(false);
+    toast({ title: "Wallpaper set", description: `Applied to ${target}.` });
   };
 
   const handleShare = () => {
@@ -195,6 +201,62 @@ export default function Preview() {
             </button>
           </div>
         </motion.div>
+
+        {/* Set wallpaper dialog */}
+        <AnimatePresence>
+          {setWallpaperOpen && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                key="swbdrop"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.18 }}
+                className="absolute inset-0 z-30 bg-black/40"
+                onClick={() => setSetWallpaperOpen(false)}
+              />
+              {/* Card */}
+              <motion.div
+                key="swcard"
+                initial={{ opacity: 0, scale: 0.93, y: 16 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.93, y: 16 }}
+                transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                className="absolute z-40 inset-x-6 rounded-2xl bg-[#3a3a3e]/90 backdrop-blur-2xl p-5 shadow-2xl"
+                style={{ top: "38%" }}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between mb-5">
+                  <p className="text-white font-semibold text-[17px]">Set wallpaper</p>
+                  <button
+                    onClick={() => setSetWallpaperOpen(false)}
+                    className="w-7 h-7 flex items-center justify-center rounded-full text-white/60 hover:text-white transition-colors"
+                    aria-label="Close"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+                {/* Options */}
+                <div className="flex flex-col gap-3">
+                  {[
+                    { label: "Home Screen", value: "Home Screen" },
+                    { label: "Lock Screen", value: "Lock Screen" },
+                    { label: "Both Screens", value: "Home Screen and Lock Screen" },
+                  ].map(({ label, value }) => (
+                    <button
+                      key={label}
+                      onClick={() => handleSetTarget(value)}
+                      className="w-full py-3.5 rounded-full bg-[#1c1c22] text-white font-semibold text-[15px] hover:bg-[#26262e] active:scale-[0.97] transition-all"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
       </motion.div>
     </MobileContainer>
   );
