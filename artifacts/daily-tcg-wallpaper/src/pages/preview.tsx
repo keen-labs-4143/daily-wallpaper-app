@@ -11,7 +11,7 @@ import {
   getListFavoritesQueryKey,
 } from "@workspace/api-client-react";
 import { generateGradient } from "@/lib/generateGradient";
-import { ChevronLeft, ChevronRight, Share2, Plus, Heart, Smartphone, Download, X } from "lucide-react";
+import { ChevronLeft, Share2, Plus, Heart, Smartphone, Download, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
@@ -206,40 +206,6 @@ export default function Preview() {
             })}
           </div>
         )}
-
-        {/* Left / Right arrow nav buttons */}
-        <AnimatePresence>
-          {canGoPrev && (
-            <motion.button
-              key="prev"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => navigate(-1)}
-              className="absolute left-3 z-20 w-9 h-9 rounded-full bg-black/35 backdrop-blur-xl flex items-center justify-center text-white border border-white/15 active:scale-90 transition-transform"
-              style={{ top: "50%", transform: "translateY(-50%)" }}
-              aria-label="Previous wallpaper"
-            >
-              <ChevronLeft size={20} />
-            </motion.button>
-          )}
-        </AnimatePresence>
-        <AnimatePresence>
-          {canGoNext && (
-            <motion.button
-              key="next"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => navigate(1)}
-              className="absolute right-3 z-20 w-9 h-9 rounded-full bg-black/35 backdrop-blur-xl flex items-center justify-center text-white border border-white/15 active:scale-90 transition-transform"
-              style={{ top: "50%", transform: "translateY(-50%)" }}
-              aria-label="Next wallpaper"
-            >
-              <ChevronRight size={20} />
-            </motion.button>
-          )}
-        </AnimatePresence>
 
         {/* Right-side FABs */}
         <motion.div
