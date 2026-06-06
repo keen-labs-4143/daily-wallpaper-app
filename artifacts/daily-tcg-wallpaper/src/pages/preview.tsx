@@ -110,12 +110,11 @@ export default function Preview() {
       const blob = await response.blob();
 
       if (Capacitor.isNativePlatform()) {
-        await Filesystem.requestPermissions();
         const base64 = await blobToBase64(blob);
         await Filesystem.writeFile({
-          path: `Pictures/${filename}`,
+          path: filename,
           data: base64,
-          directory: Directory.ExternalStorage,
+          directory: Directory.Documents,
           recursive: true,
         });
       } else {
