@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { MobileContainer } from "@/components/layout/mobile-container";
@@ -54,7 +54,6 @@ export default function Preview() {
   const [direction, setDirection] = useState(0);
   const [heartAnimating, setHeartAnimating] = useState(false);
   const [setWallpaperOpen, setSetWallpaperOpen] = useState(false);
-  const swipeStartX = useRef<number | null>(null);
 
   // Sync index from URL once wallpapers are loaded
   useEffect(() => {
@@ -161,23 +160,20 @@ export default function Preview() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Transparent swipe capture layer — sits above image, below all chrome */}
-        <div
+        {/* Transparent swipe capture layer — framer-motion drag handles touch-action and pointer capture */}
+        <motion.div
           className="absolute inset-0"
           style={{ zIndex: 5 }}
-          onPointerDown={(e) => {
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0}
+          dragMomentum={false}
+          onDragEnd={(_, info) => {
             if (setWallpaperOpen) return;
-            swipeStartX.current = e.clientX;
+            if (Math.abs(info.offset.x) > 50 || Math.abs(info.velocity.x) > 300) {
+              navigate(info.offset.x < 0 ? 1 : -1);
+            }
           }}
-          onPointerUp={(e) => {
-            if (setWallpaperOpen || swipeStartX.current === null) return;
-            const delta = e.clientX - swipeStartX.current;
-            swipeStartX.current = null;
-            if (Math.abs(delta) < 60) return;
-            if (delta < 0) navigate(1);
-            else navigate(-1);
-          }}
-          onPointerCancel={() => { swipeStartX.current = null; }}
         />
 
         {/* Scrims — always on top of image, below chrome */}
