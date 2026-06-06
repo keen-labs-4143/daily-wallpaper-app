@@ -16,6 +16,17 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Share } from "@capacitor/share";
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, Directory } from "@capacitor/filesystem";
+
+async function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve((reader.result as string).split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
 
 const slideVariants = {
   enter: (dir: number) => ({
@@ -91,8 +102,35 @@ export default function Preview() {
     }
   };
 
-  const handleSave = () => {
-    toast({ title: "Saved", description: "Wallpaper added to your downloads." });
+  const handleSave = async () => {
+    if (!wallpaper?.imageUrl) return;
+    const filename = `wallpaper-${wallpaper.id}.jpg`;
+    try {
+      const response = await fetch(wallpaper.imageUrl);
+      const blob = await response.blob();
+
+      if (Capacitor.isNativePlatform()) {
+        await Filesystem.requestPermissions();
+        const base64 = await blobToBase64(blob);
+        await Filesystem.writeFile({
+          path: `Pictures/${filename}`,
+          data: base64,
+          directory: Directory.ExternalStorage,
+          recursive: true,
+        });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      toast({ title: "Downloaded", description: "Wallpaper saved to your device." });
+    } catch {
+      toast({ title: "Download failed", description: "Could not save the wallpaper.", variant: "destructive" });
+    }
   };
 
   const handleSet = () => setSetWallpaperOpen(true);
