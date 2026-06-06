@@ -15,6 +15,7 @@ import { ChevronLeft, ChevronRight, Share2, Plus, Heart, Smartphone, Download, X
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { Share } from "@capacitor/share";
 
 const slideVariants = {
   enter: (dir: number) => ({
@@ -101,8 +102,17 @@ export default function Preview() {
     toast({ title: "Wallpaper set", description: `Applied to ${target}.` });
   };
 
-  const handleShare = () => {
-    toast({ title: "Share", description: "Sharing link copied to clipboard." });
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        title: wallpaper?.title ?? "Daily TCG Wallpaper",
+        text: `Check out "${wallpaper?.title ?? "this wallpaper"}" on Daily TCG Wallpaper`,
+        url: wallpaper?.imageUrl ?? window.location.href,
+        dialogTitle: "Share wallpaper",
+      });
+    } catch {
+      toast({ title: "Share", description: "Sharing is not available on this device." });
+    }
   };
 
   if (!match || (!isLoading && allWallpapers.length && currentIndex < 0)) {
