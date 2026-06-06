@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRoute, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { MobileContainer } from "@/components/layout/mobile-container";
@@ -54,6 +54,7 @@ export default function Preview() {
   const [direction, setDirection] = useState(0);
   const [heartAnimating, setHeartAnimating] = useState(false);
   const [setWallpaperOpen, setSetWallpaperOpen] = useState(false);
+  const swipeStartX = useRef<number | null>(null);
 
   // Sync index from URL once wallpapers are loaded
   useEffect(() => {
@@ -136,14 +137,6 @@ export default function Preview() {
         initial={{ opacity: 0, scale: 1.04 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
-        onPanEnd={(_, info) => {
-          if (setWallpaperOpen) return;
-          const { offset, velocity } = info;
-          const swipe = Math.abs(offset.x) > 60 || Math.abs(velocity.x) > 400;
-          if (!swipe) return;
-          if (offset.x < 0) navigate(1);
-          else navigate(-1);
-        }}
       >
         {/* Sliding wallpaper image layer */}
         <AnimatePresence custom={direction} mode="sync">
@@ -167,6 +160,25 @@ export default function Preview() {
             )}
           </motion.div>
         </AnimatePresence>
+
+        {/* Transparent swipe capture layer — sits above image, below all chrome */}
+        <div
+          className="absolute inset-0"
+          style={{ zIndex: 5 }}
+          onPointerDown={(e) => {
+            if (setWallpaperOpen) return;
+            swipeStartX.current = e.clientX;
+          }}
+          onPointerUp={(e) => {
+            if (setWallpaperOpen || swipeStartX.current === null) return;
+            const delta = e.clientX - swipeStartX.current;
+            swipeStartX.current = null;
+            if (Math.abs(delta) < 60) return;
+            if (delta < 0) navigate(1);
+            else navigate(-1);
+          }}
+          onPointerCancel={() => { swipeStartX.current = null; }}
+        />
 
         {/* Scrims — always on top of image, below chrome */}
         <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-black/50 to-transparent z-10 pointer-events-none" />
