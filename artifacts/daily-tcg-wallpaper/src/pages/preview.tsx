@@ -263,12 +263,6 @@ export default function Preview() {
           <FabButton onClick={handleShare} aria-label="Share">
             <Share2 size={18} />
           </FabButton>
-          <FabButton
-            onClick={() => toast({ title: "Quality", description: "This wallpaper is rendered at 4K resolution." })}
-            aria-label="4K quality"
-          >
-            <span className="text-[11px] font-extrabold tracking-tight leading-none">4K</span>
-          </FabButton>
           <FabButton onClick={toggleFavorite} aria-label="Favourite">
             <Heart
               size={18}

@@ -54,7 +54,6 @@ export default function Settings() {
   const [setHome, setSetHome] = useState(true);
   const [setLock, setSetLock] = useState(true);
   const [landscape, setLandscape] = useState(false);
-  const [res4k, setRes4k] = useState(false);
   const [autoDownload, setAutoDownload] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const [scheduleOpen, setScheduleOpen] = useState(false);
@@ -212,22 +211,7 @@ export default function Settings() {
             </div>
           </Card>
 
-          {/* Card 2 — 4K Resolution */}
-          <Card>
-            <Row
-              label="4K Resolution"
-              sublabel="Higher quality downloads"
-              noBorder
-              right={
-                <Switch
-                  checked={res4k}
-                  onCheckedChange={setRes4k}
-                />
-              }
-            />
-          </Card>
-
-          {/* Card 3 — Automatic wallpaper download */}
+          {/* Card 2 — Automatic wallpaper download */}
           <Card>
             <Row
               label="Automatic wallpaper download"
