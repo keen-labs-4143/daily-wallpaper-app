@@ -11,13 +11,14 @@ import {
   getListFavoritesQueryKey,
 } from "@workspace/api-client-react";
 import { generateGradient } from "@/lib/generateGradient";
-import { ChevronLeft, Share2, Plus, Heart, Smartphone, Download, X } from "lucide-react";
+import { ChevronLeft, Share2, Heart, Smartphone, Download, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Share } from "@capacitor/share";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
+import { isSetWallpaperSupported, setWallpaper } from "@/lib/wallpaper-native";
 
 async function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -136,7 +137,20 @@ export default function Preview() {
 
   const handleSetTarget = (target: string) => {
     setSetWallpaperOpen(false);
-    toast({ title: "Wallpaper set", description: `Applied to ${target}.` });
+    if (Capacitor.isNativePlatform()) {
+      if (isSetWallpaperSupported()) {
+        // SetWallpaperPlugin is installed — attempt native set
+        void setWallpaper(wallpaper?.imageUrl ?? "", target as "home" | "lock" | "both")
+          .then(() => toast({ title: "Wallpaper set", description: `Applied to ${target}.` }))
+          .catch(() => toast({ title: "Could not set wallpaper", description: "Please try again.", variant: "destructive" }));
+      } else {
+        // TODO: Remove once SetWallpaperPlugin is registered in MainActivity.java
+        // See lib/wallpaper-native.ts for implementation instructions.
+        toast({ title: "Coming soon", description: "Native wallpaper setting is in development." });
+      }
+    } else {
+      toast({ title: "Wallpaper set", description: `Applied to ${target}.` });
+    }
   };
 
   const handleShare = async () => {
@@ -273,13 +287,6 @@ export default function Preview() {
               )}
             />
           </FabButton>
-          <FabButton
-            onClick={() => toast({ title: "Added to collection", description: "Saved to your collection." })}
-            aria-label="Add to collection"
-            large
-          >
-            <Plus size={22} />
-          </FabButton>
         </motion.div>
 
         {/* Wallpaper title — fades when wallpaper changes */}
@@ -393,21 +400,16 @@ function FabButton({
   children,
   onClick,
   "aria-label": ariaLabel,
-  large = false,
 }: {
   children: React.ReactNode;
   onClick: () => void;
   "aria-label": string;
-  large?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
       aria-label={ariaLabel}
-      className={cn(
-        "rounded-full bg-black/40 backdrop-blur-xl flex items-center justify-center text-white border border-white/15 active:scale-90 transition-transform shadow-lg",
-        large ? "w-12 h-12" : "w-10 h-10"
-      )}
+      className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-xl flex items-center justify-center text-white border border-white/15 active:scale-90 transition-transform shadow-lg"
     >
       {children}
     </button>

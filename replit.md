@@ -71,6 +71,41 @@ Android project: `artifacts/daily-tcg-wallpaper/android/`
 - The Vite build requires `PORT` and `BASE_PATH` env vars; `cap:build` script sets them automatically
 - Android Studio is required to build the APK; Gradle cannot run in this Replit environment
 
+## Platform Capability Matrix
+
+| Feature | Web | Android (Capacitor) | Status |
+|---|---|---|---|
+| View / browse wallpapers | Live | Live | Done |
+| Favorites (heart) | Live | Live | Done |
+| Share wallpaper | Native share sheet | Native share sheet | Done |
+| Share app (drawer) | Native share sheet | Native share sheet | Done |
+| Download wallpaper | Browser download dialog | Saves to `Documents/` (Files app) | Done |
+| Daily notifications | Preference stored only | Requests permission, schedules 9 AM daily | Done on Android |
+| Set Wallpaper (UI) | Toast placeholder | "Coming soon" toast | UI only |
+| Set Wallpaper (native) | N/A | Needs `SetWallpaperPlugin` — see `lib/wallpaper-native.ts` | TODO |
+| Automatic wallpaper update | Preference stored | Preference stored | Needs WorkManager |
+| Automatic wallpaper download | Preference stored | Preference stored | Needs WorkManager |
+| All settings | Persisted to `localStorage` | Persisted to `localStorage` | Done |
+| Wallpaper Archive | Coming soon | Coming soon | Placeholder |
+| Widget | Coming soon | Coming soon | Placeholder |
+| Schedule options | Coming soon | Coming soon | Placeholder |
+| Rate App | Coming soon | Coming soon | Needs store listing |
+| Privacy Policy | Coming soon | Coming soon | Needs URL |
+
+## Native TODOs
+
+### SetWallpaperPlugin (Android WallpaperManager)
+See `artifacts/daily-tcg-wallpaper/src/lib/wallpaper-native.ts` for the full spec.
+Steps: create the Java plugin, register in `MainActivity.java`, add `SET_WALLPAPER` permission,
+set `PLUGIN_INSTALLED = true` in `wallpaper-native.ts`.
+
+### WorkManager (background tasks)
+`autoUpdate` and `autoDownload` are persisted preferences. To make them functional:
+1. Create a `WallpaperUpdateWorker.java` using Android WorkManager
+2. Schedule a `PeriodicWorkRequest` (daily) when the toggle is enabled
+3. Cancel the job when the toggle is disabled
+4. The worker reads the preference and calls download / wallpaper-set logic accordingly
+
 ## Pointers
 
 - See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details

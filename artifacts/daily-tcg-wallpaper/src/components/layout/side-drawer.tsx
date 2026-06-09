@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { Share } from "@capacitor/share";
 
 interface SideDrawerProps {
   open: boolean;
@@ -55,6 +56,18 @@ export function SideDrawer({ open, onClose }: SideDrawerProps) {
     },
   ];
 
+  const handleShare = () => {
+    onClose();
+    void Share.share({
+      title: "Daily TCG Wallpaper",
+      text: "Get a new trading-card-inspired wallpaper every day.",
+      url: "https://dailytcgwallpaper.replit.app",
+      dialogTitle: "Share Daily TCG Wallpaper",
+    }).catch(() => {
+      // Share not available on this platform (desktop web) — silent no-op
+    });
+  };
+
   const secondaryItems: MenuItem[] = [
     {
       icon: <Info size={20} />,
@@ -69,7 +82,7 @@ export function SideDrawer({ open, onClose }: SideDrawerProps) {
     {
       icon: <Share2 size={20} />,
       label: "Share",
-      action: () => comingSoon("Share"),
+      action: handleShare,
     },
   ];
 

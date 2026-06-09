@@ -8,6 +8,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronLeft, ChevronDown, ExternalLink, Search, LayoutGrid } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useSettings } from "@/hooks/use-settings";
+import { Capacitor } from "@capacitor/core";
+import { requestAndScheduleNotification, cancelNotification } from "@/lib/notifications";
 
 function Card({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -49,18 +52,33 @@ function Row({
 export default function Settings() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { settings, set } = useSettings();
 
-  const [autoUpdate, setAutoUpdate] = useState(true);
-  const [setHome, setSetHome] = useState(true);
-  const [setLock, setSetLock] = useState(true);
-  const [landscape, setLandscape] = useState(false);
-  const [autoDownload, setAutoDownload] = useState(false);
-  const [notifications, setNotifications] = useState(true);
+  // UI-only state (not persisted as user preferences)
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [learnMoreOpen, setLearnMoreOpen] = useState(false);
 
   const comingSoon = (label: string) =>
     toast({ title: label, description: "This feature is coming soon." });
+
+  const handleNotificationsChange = (checked: boolean) => {
+    void (async () => {
+      if (checked) {
+        const { granted } = await requestAndScheduleNotification();
+        if (Capacitor.isNativePlatform() && !granted) {
+          toast({
+            title: "Permission denied",
+            description: "Enable notifications in device settings.",
+          });
+          return;
+        }
+        set("notifications", true);
+      } else {
+        await cancelNotification();
+        set("notifications", false);
+      }
+    })();
+  };
 
   return (
     <MobileContainer>
@@ -84,12 +102,18 @@ export default function Settings() {
           {/* Card 1 — Wallpaper update settings */}
           <Card>
             {/* Automatic wallpaper update */}
+            {/*
+              TODO (Android): Wire this toggle to a WorkManager PeriodicWorkRequest
+              so wallpapers update in the background without the app being open.
+              The preference is persisted here; the WorkManager job should read it
+              at schedule time and cancel/reschedule accordingly.
+            */}
             <Row
               label="Automatic wallpaper update"
               right={
                 <Switch
-                  checked={autoUpdate}
-                  onCheckedChange={setAutoUpdate}
+                  checked={settings.autoUpdate}
+                  onCheckedChange={(v) => set("autoUpdate", v)}
                 />
               }
             />
@@ -161,8 +185,8 @@ export default function Settings() {
             <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/[0.06]">
               <p className="text-white font-medium text-[15px]">Set on Home screen</p>
               <Checkbox
-                checked={setHome}
-                onCheckedChange={(v) => setSetHome(!!v)}
+                checked={settings.setHome}
+                onCheckedChange={(v) => set("setHome", !!v)}
                 className="w-5 h-5 rounded border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
             </div>
@@ -171,8 +195,8 @@ export default function Settings() {
             <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/[0.06]">
               <p className="text-white font-medium text-[15px]">Set on Lock screen</p>
               <Checkbox
-                checked={setLock}
-                onCheckedChange={(v) => setSetLock(!!v)}
+                checked={settings.setLock}
+                onCheckedChange={(v) => set("setLock", !!v)}
                 className="w-5 h-5 rounded border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
             </div>
@@ -181,8 +205,8 @@ export default function Settings() {
             <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/[0.06]">
               <p className="text-white font-medium text-[15px]">Landscape wallpaper</p>
               <Checkbox
-                checked={landscape}
-                onCheckedChange={(v) => setLandscape(!!v)}
+                checked={settings.landscape}
+                onCheckedChange={(v) => set("landscape", !!v)}
                 className="w-5 h-5 rounded border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
             </div>
@@ -212,6 +236,12 @@ export default function Settings() {
           </Card>
 
           {/* Card 2 — Automatic wallpaper download */}
+          {/*
+            TODO (Android): Wire this to a WorkManager PeriodicWorkRequest that
+            calls the download logic (see lib/notifications.ts for the pattern).
+            The preference is persisted; WorkManager should read it and skip
+            the download job if autoDownload is false.
+          */}
           <Card>
             <Row
               label="Automatic wallpaper download"
@@ -219,14 +249,17 @@ export default function Settings() {
               noBorder
               right={
                 <Switch
-                  checked={autoDownload}
-                  onCheckedChange={setAutoDownload}
+                  checked={settings.autoDownload}
+                  onCheckedChange={(v) => set("autoDownload", v)}
                 />
               }
             />
           </Card>
 
-          {/* Card 4 — Notifications */}
+          {/* Card 3 — Notifications */}
+          {/* Fully wired: requests permission and schedules/cancels a daily 9 AM
+              local notification on Android. Preference is persisted on web so it
+              takes effect when the Android build is installed. */}
           <Card>
             <Row
               label="Notifications"
@@ -234,14 +267,14 @@ export default function Settings() {
               noBorder
               right={
                 <Switch
-                  checked={notifications}
-                  onCheckedChange={setNotifications}
+                  checked={settings.notifications}
+                  onCheckedChange={handleNotificationsChange}
                 />
               }
             />
           </Card>
 
-          {/* Card 5 — Widget */}
+          {/* Card 4 — Widget */}
           <Card>
             <div className="px-4 pt-4 pb-5">
               <div className="flex items-center gap-2 mb-3">
