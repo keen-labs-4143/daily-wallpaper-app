@@ -13,7 +13,11 @@ export default function Favorites() {
   const { data: favorites = [], isLoading: isLoadingFavs } = useListFavorites({ query: { queryKey: getListFavoritesQueryKey() }});
 
   const isLoading = isLoadingWalls || isLoadingFavs;
-  const favoriteCards = allWallpapers.filter(w => favorites.includes(w.id));
+  const wallpaperMap = new Map(allWallpapers.map(w => [w.id, w]));
+  const favoriteCards = favorites.flatMap(id => {
+    const w = wallpaperMap.get(id);
+    return w ? [w] : [];
+  });
 
   return (
     <MobileContainer>

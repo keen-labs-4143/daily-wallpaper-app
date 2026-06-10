@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, favoritesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import {
   AddFavoriteParams,
   RemoveFavoriteParams,
@@ -10,7 +10,7 @@ const router = Router();
 
 router.get("/favorites", async (req, res) => {
   try {
-    const favs = await db.select().from(favoritesTable);
+    const favs = await db.select().from(favoritesTable).orderBy(desc(favoritesTable.createdAt));
     const ids = favs.map((f) => f.wallpaperId);
     res.json(ids);
   } catch (err) {
