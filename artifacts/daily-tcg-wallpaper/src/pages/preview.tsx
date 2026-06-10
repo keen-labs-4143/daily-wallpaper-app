@@ -11,7 +11,7 @@ import {
   getListFavoritesQueryKey,
 } from "@workspace/api-client-react";
 import { generateGradient } from "@/lib/generateGradient";
-import { ChevronLeft, Share2, Heart, Smartphone, Download, X } from "lucide-react";
+import { ChevronLeft, Share2, Heart, Smartphone, Download, X, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
@@ -66,6 +66,7 @@ export default function Preview() {
   const [direction, setDirection] = useState(0);
   const [heartAnimating, setHeartAnimating] = useState(false);
   const [setWallpaperOpen, setSetWallpaperOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Sync index from URL once wallpapers are loaded
   useEffect(() => {
@@ -104,7 +105,8 @@ export default function Preview() {
   };
 
   const handleSave = async () => {
-    if (!wallpaper?.imageUrl) return;
+    if (!wallpaper?.imageUrl || isSaving) return;
+    setIsSaving(true);
     const filename = `wallpaper-${wallpaper.id}.jpg`;
     try {
       const response = await fetch(wallpaper.imageUrl);
@@ -130,6 +132,8 @@ export default function Preview() {
       toast({ title: "Downloaded", description: "Wallpaper saved to your device." });
     } catch {
       toast({ title: "Download failed", description: "Could not save the wallpaper.", variant: "destructive" });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -332,10 +336,15 @@ export default function Preview() {
             </button>
             <button
               onClick={handleSave}
-              className="flex-1 flex items-center justify-center gap-2 py-5 text-white/90 font-semibold text-[15px] hover:bg-white/5 transition-colors active:bg-white/10"
+              disabled={isSaving}
+              className="flex-1 flex items-center justify-center gap-2 py-5 text-white/90 font-semibold text-[15px] hover:bg-white/5 transition-colors active:bg-white/10 disabled:opacity-60"
             >
-              <Download size={17} />
-              Save wallpaper
+              {isSaving ? (
+                <Loader2 size={17} className="animate-spin" />
+              ) : (
+                <Download size={17} />
+              )}
+              {isSaving ? "Saving..." : "Save wallpaper"}
             </button>
           </div>
         </motion.div>
