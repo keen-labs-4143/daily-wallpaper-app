@@ -19,6 +19,7 @@ import { Share } from "@capacitor/share";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { isSetWallpaperSupported, setWallpaper } from "@/lib/wallpaper-native";
+import { COMMUNITY_WALLPAPERS } from "@/data/community-wallpapers";
 
 async function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -68,24 +69,36 @@ export default function Preview() {
   const [setWallpaperOpen, setSetWallpaperOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Community wallpapers (IDs 100+) are local-only; API wallpapers come from the DB
+  const isCommunity = urlId >= 100;
+  const communityAsWallpapers = COMMUNITY_WALLPAPERS.map((w) => ({
+    id: w.id,
+    title: w.title,
+    mood: w.mood,
+    style: w.style,
+    imageUrl: w.imageUrl,
+    releaseDate: "",
+  }));
+  const displayWallpapers = isCommunity ? communityAsWallpapers : allWallpapers;
+
   // Sync index from URL once wallpapers are loaded
   useEffect(() => {
-    if (allWallpapers.length && urlId) {
-      const idx = allWallpapers.findIndex((w) => w.id === urlId);
+    if (displayWallpapers.length && urlId) {
+      const idx = displayWallpapers.findIndex((w) => w.id === urlId);
       if (idx >= 0 && currentIndex === -1) setCurrentIndex(idx);
     }
-  }, [allWallpapers, urlId, currentIndex]);
+  }, [displayWallpapers.length, urlId, currentIndex]);
 
-  const wallpaper = currentIndex >= 0 ? allWallpapers[currentIndex] : undefined;
+  const wallpaper = currentIndex >= 0 ? displayWallpapers[currentIndex] : undefined;
   const canGoPrev = currentIndex > 0;
-  const canGoNext = currentIndex < allWallpapers.length - 1;
+  const canGoNext = currentIndex < displayWallpapers.length - 1;
 
   const navigate = (dir: number) => {
     const next = currentIndex + dir;
-    if (next < 0 || next >= allWallpapers.length) return;
+    if (next < 0 || next >= displayWallpapers.length) return;
     setDirection(dir);
     setCurrentIndex(next);
-    setLocation(`/preview/${allWallpapers[next].id}`, { replace: true } as never);
+    setLocation(`/preview/${displayWallpapers[next].id}`, { replace: true } as never);
   };
 
   const isFavorited = wallpaper ? favorites.includes(wallpaper.id) : false;
@@ -251,11 +264,11 @@ export default function Preview() {
         </motion.button>
 
         {/* Dot indicator */}
-        {allWallpapers.length > 1 && (
+        {displayWallpapers.length > 1 && (
           <div className="absolute top-14 inset-x-0 z-20 flex justify-center gap-1.5 pointer-events-none">
-            {allWallpapers.slice(
+            {displayWallpapers.slice(
               Math.max(0, currentIndex - 3),
-              Math.min(allWallpapers.length, currentIndex + 4)
+              Math.min(displayWallpapers.length, currentIndex + 4)
             ).map((_, relI) => {
               const absI = Math.max(0, currentIndex - 3) + relI;
               return (
@@ -284,16 +297,18 @@ export default function Preview() {
           <FabButton onClick={handleShare} aria-label="Share">
             <Share2 size={18} />
           </FabButton>
-          <FabButton onClick={toggleFavorite} aria-label="Favourite">
-            <Heart
-              size={18}
-              className={cn(
-                "transition-all duration-200",
-                isFavorited ? "fill-rose-500 text-rose-500" : "",
-                heartAnimating && "scale-125"
-              )}
-            />
-          </FabButton>
+          {!isCommunity && (
+            <FabButton onClick={toggleFavorite} aria-label="Favourite">
+              <Heart
+                size={18}
+                className={cn(
+                  "transition-all duration-200",
+                  isFavorited ? "fill-rose-500 text-rose-500" : "",
+                  heartAnimating && "scale-125"
+                )}
+              />
+            </FabButton>
+          )}
         </motion.div>
 
         {/* Wallpaper title — fades when wallpaper changes */}

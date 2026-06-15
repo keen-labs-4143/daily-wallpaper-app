@@ -59,7 +59,7 @@ export default function Today() {
 
   return (
     <MobileContainer>
-      <div className="flex-1 flex flex-col relative">
+      <div className="h-[100dvh] flex flex-col overflow-hidden relative">
         <SideDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
         {/* Header + Tab bar — sticky */}
@@ -181,7 +181,7 @@ export default function Today() {
                     imageUrl={w.imageUrl}
                     subtitle={`by ${w.author}`}
                     isFavorited={favorites.includes(w.id)}
-                    onTap={() => {}}
+                    onTap={() => setLocation(`/preview/${w.id}`)}
                     onFavorite={() => toggleFavorite(w.id)}
                     index={i}
                   />
