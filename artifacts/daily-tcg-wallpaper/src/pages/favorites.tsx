@@ -21,8 +21,9 @@ export default function Favorites() {
 
   return (
     <MobileContainer>
-      <div className="flex-1 overflow-y-auto pb-32 no-scrollbar px-6 pt-12">
-        <div className="flex items-center gap-3 mb-2 -ml-1.5">
+      {/* Sticky header */}
+      <div className="sticky top-0 z-20 bg-background/90 backdrop-blur-xl border-b border-white/5 px-6 pt-12 pb-4">
+        <div className="flex items-center gap-3 -ml-1.5">
           <button
             onClick={() => setLocation("/today")}
             className="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/8 transition-colors"
@@ -32,8 +33,10 @@ export default function Favorites() {
           </button>
           <h1 className="text-4xl font-serif font-bold text-white">Favorites</h1>
         </div>
-        <p className="text-white/50 mb-8 font-medium pl-1">{favoriteCards.length} wallpapers</p>
+        <p className="text-white/50 mt-1 font-medium pl-1">{favoriteCards.length} wallpapers</p>
+      </div>
 
+      <div className="flex-1 overflow-y-auto pb-32 no-scrollbar px-6 pt-6">
         {isLoading ? (
           <div className="grid grid-cols-2 gap-4">
             {[1,2,3,4].map(i => <Skeleton key={i} className="aspect-[9/16] rounded-2xl bg-white/5" />)}

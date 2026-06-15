@@ -62,23 +62,24 @@ export default function Today() {
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <SideDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
-        {/* Header */}
-        <div className="pt-12 px-5 pb-0 flex-shrink-0 flex items-center gap-3">
-          <button
-            onClick={() => setDrawerOpen(true)}
-            className="p-1.5 -ml-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/8 transition-colors"
-            aria-label="Open menu"
-          >
-            <Menu size={24} />
-          </button>
-          <h1 className="text-xl font-serif font-bold text-white tracking-tight">
-            Daily TCG Wallpaper
-          </h1>
-        </div>
+        {/* Header + Tab bar — sticky */}
+        <div className="sticky top-0 z-20 flex-shrink-0 bg-background/90 backdrop-blur-xl border-b border-white/5">
+          <div className="pt-12 px-5 pb-0 flex items-center gap-3">
+            <button
+              onClick={() => setDrawerOpen(true)}
+              className="p-1.5 -ml-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/8 transition-colors"
+              aria-label="Open menu"
+            >
+              <Menu size={24} />
+            </button>
+            <h1 className="text-xl font-serif font-bold text-white tracking-tight">
+              Daily TCG Wallpaper
+            </h1>
+          </div>
 
-        {/* Tab bar */}
-        <div className="flex-shrink-0 px-5 mt-4">
-          <div className="flex gap-0 border-b border-white/8">
+          {/* Tab bar */}
+          <div className="px-5 mt-4">
+            <div className="flex gap-0 border-b border-white/8">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
@@ -101,6 +102,7 @@ export default function Today() {
               </button>
             ))}
           </div>
+        </div>
         </div>
 
         {/* Feed content */}
