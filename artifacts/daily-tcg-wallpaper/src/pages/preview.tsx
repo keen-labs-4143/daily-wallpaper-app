@@ -120,6 +120,7 @@ export default function Preview() {
           directory: Directory.Documents,
           recursive: true,
         });
+        toast({ title: "Downloaded", description: "Wallpaper saved to your device." });
       } else {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -127,9 +128,11 @@ export default function Preview() {
         a.download = filename;
         a.click();
         URL.revokeObjectURL(url);
+        // Delay so the browser's download dialog renders before the toast
+        setTimeout(() => {
+          toast({ title: "Downloaded", description: "Wallpaper saved to your device." });
+        }, 800);
       }
-
-      toast({ title: "Downloaded", description: "Wallpaper saved to your device." });
     } catch {
       toast({ title: "Download failed", description: "Could not save the wallpaper.", variant: "destructive" });
     } finally {
