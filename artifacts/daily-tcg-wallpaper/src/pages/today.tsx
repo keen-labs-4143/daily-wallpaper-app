@@ -59,7 +59,7 @@ export default function Today() {
 
   return (
     <MobileContainer>
-      <div className="flex-1 flex flex-col overflow-hidden relative">
+      <div className="flex-1 flex flex-col relative">
         <SideDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
         {/* Header + Tab bar — sticky */}
