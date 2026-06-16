@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { MobileContainer } from "@/components/layout/mobile-container";
@@ -6,18 +6,39 @@ import { WallpaperCard } from "@/components/wallpaper/wallpaper-card";
 import { useListWallpapers, useListFavorites, getListWallpapersQueryKey, getListFavoritesQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BookmarkMinus, ChevronLeft } from "lucide-react";
+import { COMMUNITY_WALLPAPERS } from "@/data/community-wallpapers";
 
 export default function Favorites() {
   const [, setLocation] = useLocation();
   const { data: allWallpapers = [], isLoading: isLoadingWalls } = useListWallpapers({ query: { queryKey: getListWallpapersQueryKey() }});
   const { data: favorites = [], isLoading: isLoadingFavs } = useListFavorites({ query: { queryKey: getListFavoritesQueryKey() }});
 
+  const [communityLikes] = useState<number[]>(() => {
+    try {
+      const stored = localStorage.getItem("dtcg:community-likes");
+      return stored ? (JSON.parse(stored) as number[]) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const isLoading = isLoadingWalls || isLoadingFavs;
+
+  // DB-backed favorites
   const wallpaperMap = new Map(allWallpapers.map(w => [w.id, w]));
-  const favoriteCards = favorites.flatMap(id => {
+  const dbFavoriteCards = favorites.flatMap(id => {
     const w = wallpaperMap.get(id);
     return w ? [w] : [];
   });
+
+  // Community likes from localStorage
+  const communityMap = new Map(COMMUNITY_WALLPAPERS.map(w => [w.id, w]));
+  const communityFavoriteCards = communityLikes.flatMap(id => {
+    const w = communityMap.get(id);
+    return w ? [{ id: w.id, title: w.title, mood: w.mood, style: w.style, imageUrl: w.imageUrl, releaseDate: "" }] : [];
+  });
+
+  const favoriteCards = [...dbFavoriteCards, ...communityFavoriteCards];
 
   return (
     <MobileContainer>
