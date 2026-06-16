@@ -69,6 +69,20 @@ export default function Preview() {
   const [setWallpaperOpen, setSetWallpaperOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Community likes — stored in localStorage since these aren't DB records
+  const [communityLikes, setCommunityLikes] = useState<number[]>(() => {
+    try {
+      const stored = localStorage.getItem("dtcg:community-likes");
+      return stored ? (JSON.parse(stored) as number[]) : [];
+    } catch {
+      return [];
+    }
+  });
+  const saveCommunityLikes = (next: number[]) => {
+    setCommunityLikes(next);
+    localStorage.setItem("dtcg:community-likes", JSON.stringify(next));
+  };
+
   // Community wallpapers (IDs 100+) are local-only; API wallpapers come from the DB
   const isCommunity = urlId >= 100;
   const communityAsWallpapers = COMMUNITY_WALLPAPERS.map((w) => ({
@@ -101,19 +115,31 @@ export default function Preview() {
     setLocation(`/preview/${displayWallpapers[next].id}`, { replace: true } as never);
   };
 
-  const isFavorited = wallpaper ? favorites.includes(wallpaper.id) : false;
+  const isFavorited = wallpaper
+    ? isCommunity
+      ? communityLikes.includes(wallpaper.id)
+      : favorites.includes(wallpaper.id)
+    : false;
 
   const toggleFavorite = () => {
     if (!wallpaper) return;
     setHeartAnimating(true);
     setTimeout(() => setHeartAnimating(false), 400);
-    queryClient.setQueryData(getListFavoritesQueryKey(), (old: number[] = []) =>
-      isFavorited ? old.filter((fid) => fid !== wallpaper.id) : [...old, wallpaper.id]
-    );
-    if (isFavorited) {
-      removeFav.mutate({ wallpaperId: wallpaper.id });
+    if (isCommunity) {
+      saveCommunityLikes(
+        isFavorited
+          ? communityLikes.filter((id) => id !== wallpaper.id)
+          : [...communityLikes, wallpaper.id]
+      );
     } else {
-      addFav.mutate({ wallpaperId: wallpaper.id });
+      queryClient.setQueryData(getListFavoritesQueryKey(), (old: number[] = []) =>
+        isFavorited ? old.filter((fid) => fid !== wallpaper.id) : [...old, wallpaper.id]
+      );
+      if (isFavorited) {
+        removeFav.mutate({ wallpaperId: wallpaper.id });
+      } else {
+        addFav.mutate({ wallpaperId: wallpaper.id });
+      }
     }
   };
 
@@ -297,18 +323,16 @@ export default function Preview() {
           <FabButton onClick={handleShare} aria-label="Share">
             <Share2 size={18} />
           </FabButton>
-          {!isCommunity && (
-            <FabButton onClick={toggleFavorite} aria-label="Favourite">
-              <Heart
-                size={18}
-                className={cn(
-                  "transition-all duration-200",
-                  isFavorited ? "fill-rose-500 text-rose-500" : "",
-                  heartAnimating && "scale-125"
-                )}
-              />
-            </FabButton>
-          )}
+          <FabButton onClick={toggleFavorite} aria-label="Favourite">
+            <Heart
+              size={18}
+              className={cn(
+                "transition-all duration-200",
+                isFavorited ? "fill-rose-500 text-rose-500" : "",
+                heartAnimating && "scale-125"
+              )}
+            />
+          </FabButton>
         </motion.div>
 
         {/* Wallpaper title — fades when wallpaper changes */}
