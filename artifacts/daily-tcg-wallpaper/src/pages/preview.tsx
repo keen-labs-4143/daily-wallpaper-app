@@ -70,15 +70,22 @@ export default function Preview() {
   const [isSaving, setIsSaving] = useState(false);
 
   // Community likes — stored in localStorage since these aren't DB records
-  const [communityLikes, setCommunityLikes] = useState<number[]>(() => {
+  // Format: { id: number; ts: number }[] newest first
+  const [communityLikes, setCommunityLikes] = useState<{ id: number; ts: number }[]>(() => {
     try {
       const stored = localStorage.getItem("dtcg:community-likes");
-      return stored ? (JSON.parse(stored) as number[]) : [];
+      if (!stored) return [];
+      const parsed = JSON.parse(stored) as unknown;
+      // Migrate old number[] format
+      if (Array.isArray(parsed) && typeof parsed[0] === "number") {
+        return (parsed as number[]).map((id) => ({ id, ts: 0 }));
+      }
+      return parsed as { id: number; ts: number }[];
     } catch {
       return [];
     }
   });
-  const saveCommunityLikes = (next: number[]) => {
+  const saveCommunityLikes = (next: { id: number; ts: number }[]) => {
     setCommunityLikes(next);
     localStorage.setItem("dtcg:community-likes", JSON.stringify(next));
   };
@@ -117,7 +124,7 @@ export default function Preview() {
 
   const isFavorited = wallpaper
     ? isCommunity
-      ? communityLikes.includes(wallpaper.id)
+      ? communityLikes.some((l) => l.id === wallpaper.id)
       : favorites.includes(wallpaper.id)
     : false;
 
@@ -128,13 +135,18 @@ export default function Preview() {
     if (isCommunity) {
       saveCommunityLikes(
         isFavorited
-          ? communityLikes.filter((id) => id !== wallpaper.id)
-          : [...communityLikes, wallpaper.id]
+          ? communityLikes.filter((l) => l.id !== wallpaper.id)
+          : [{ id: wallpaper.id, ts: Date.now() }, ...communityLikes]
       );
     } else {
       queryClient.setQueryData(getListFavoritesQueryKey(), (old: number[] = []) =>
-        isFavorited ? old.filter((fid) => fid !== wallpaper.id) : [...old, wallpaper.id]
+        isFavorited ? old.filter((fid) => fid !== wallpaper.id) : [wallpaper.id, ...old]
       );
+      try {
+        const ts = JSON.parse(localStorage.getItem("dtcg:fav-timestamps") || "{}") as Record<number, number>;
+        if (isFavorited) { delete ts[wallpaper.id]; } else { ts[wallpaper.id] = Date.now(); }
+        localStorage.setItem("dtcg:fav-timestamps", JSON.stringify(ts));
+      } catch { /* ignore */ }
       if (isFavorited) {
         removeFav.mutate({ wallpaperId: wallpaper.id });
       } else {

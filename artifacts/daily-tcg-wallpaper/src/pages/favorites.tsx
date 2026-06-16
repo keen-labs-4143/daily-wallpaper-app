@@ -13,32 +13,50 @@ export default function Favorites() {
   const { data: allWallpapers = [], isLoading: isLoadingWalls } = useListWallpapers({ query: { queryKey: getListWallpapersQueryKey() }});
   const { data: favorites = [], isLoading: isLoadingFavs } = useListFavorites({ query: { queryKey: getListFavoritesQueryKey() }});
 
-  const [communityLikes] = useState<number[]>(() => {
+  const [communityLikes] = useState<{ id: number; ts: number }[]>(() => {
     try {
       const stored = localStorage.getItem("dtcg:community-likes");
-      return stored ? (JSON.parse(stored) as number[]) : [];
+      if (!stored) return [];
+      const parsed = JSON.parse(stored) as unknown;
+      if (Array.isArray(parsed) && typeof parsed[0] === "number") {
+        return (parsed as number[]).map((id) => ({ id, ts: 0 }));
+      }
+      return parsed as { id: number; ts: number }[];
     } catch {
       return [];
     }
   });
 
+  const [favTimestamps] = useState<Record<number, number>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("dtcg:fav-timestamps") || "{}") as Record<number, number>;
+    } catch {
+      return {};
+    }
+  });
+
   const isLoading = isLoadingWalls || isLoadingFavs;
 
-  // DB-backed favorites
+  // Build unified card list with timestamps, then sort newest first
   const wallpaperMap = new Map(allWallpapers.map(w => [w.id, w]));
-  const dbFavoriteCards = favorites.flatMap(id => {
-    const w = wallpaperMap.get(id);
-    return w ? [w] : [];
-  });
-
-  // Community likes from localStorage
   const communityMap = new Map(COMMUNITY_WALLPAPERS.map(w => [w.id, w]));
-  const communityFavoriteCards = communityLikes.flatMap(id => {
-    const w = communityMap.get(id);
-    return w ? [{ id: w.id, title: w.title, mood: w.mood, style: w.style, imageUrl: w.imageUrl, releaseDate: "" }] : [];
+
+  type FavCard = { id: number; title: string; mood: string; style: string; imageUrl?: string; releaseDate: string; ts: number };
+
+  const dbCards: FavCard[] = favorites.flatMap((id, index) => {
+    const w = wallpaperMap.get(id);
+    if (!w) return [];
+    // Use tracked timestamp if available, otherwise fall back to API order position
+    const ts = favTimestamps[id] ?? (Date.now() - index * 1000 * 60 * 60 * 24);
+    return [{ ...w, ts }];
   });
 
-  const favoriteCards = [...dbFavoriteCards, ...communityFavoriteCards];
+  const communityCards: FavCard[] = communityLikes.flatMap(({ id, ts }) => {
+    const w = communityMap.get(id);
+    return w ? [{ id: w.id, title: w.title, mood: w.mood, style: w.style, imageUrl: w.imageUrl, releaseDate: "", ts }] : [];
+  });
+
+  const favoriteCards = [...dbCards, ...communityCards].sort((a, b) => b.ts - a.ts);
 
   return (
     <MobileContainer>

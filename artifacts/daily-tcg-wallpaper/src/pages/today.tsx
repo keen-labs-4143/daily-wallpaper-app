@@ -42,8 +42,13 @@ export default function Today() {
   const toggleFavorite = (id: number) => {
     const isFav = favorites.includes(id);
     queryClient.setQueryData(getListFavoritesQueryKey(), (old: number[] = []) =>
-      isFav ? old.filter((f) => f !== id) : [...old, id]
+      isFav ? old.filter((f) => f !== id) : [id, ...old]
     );
+    try {
+      const ts = JSON.parse(localStorage.getItem("dtcg:fav-timestamps") || "{}") as Record<number, number>;
+      if (isFav) { delete ts[id]; } else { ts[id] = Date.now(); }
+      localStorage.setItem("dtcg:fav-timestamps", JSON.stringify(ts));
+    } catch { /* ignore */ }
     if (isFav) {
       removeFav.mutate({ wallpaperId: id });
     } else {
