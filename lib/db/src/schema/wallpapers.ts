@@ -9,6 +9,10 @@ export const wallpapersTable = pgTable("wallpapers", {
   style: text("style").notNull(),
   imageUrl: text("image_url").notNull(),
   releaseDate: text("release_date").notNull(),
+  locationOrDescription: text("location_or_description"),
+  sourceCredit: text("source_credit"),
+  sourceName: text("source_name"),
+  artistName: text("artist_name"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

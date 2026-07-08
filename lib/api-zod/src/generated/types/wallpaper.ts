@@ -16,4 +16,12 @@ export interface Wallpaper {
   imageUrl: string;
   /** ISO date string */
   releaseDate: string;
+  /** Where the scene is set or a short description, e.g. Sunrise at Lake Atitlán, Guatemala */
+  locationOrDescription?: string | null;
+  /** Attribution string shown in notifications, e.g. (© shayes17/Getty Images) */
+  sourceCredit?: string | null;
+  /** Name of the source/publisher, e.g. Getty Images */
+  sourceName?: string | null;
+  /** Name of the artist or photographer */
+  artistName?: string | null;
 }

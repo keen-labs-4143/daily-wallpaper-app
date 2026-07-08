@@ -27,7 +27,11 @@ export const ListWallpapersResponseItem = zod.object({
   "mood": zod.string().describe('Visual tone e.g. Dark, Warm, Moody, Vibrant, Cool'),
   "style": zod.string().describe('Visual style e.g. Holographic, Minimal, Neon, Gradient, Cinematic'),
   "imageUrl": zod.string(),
-  "releaseDate": zod.string().describe('ISO date string')
+  "releaseDate": zod.string().describe('ISO date string'),
+  "locationOrDescription": zod.string().nullish().describe('Where the scene is set or a short description, e.g. Sunrise at Lake Atitlán, Guatemala'),
+  "sourceCredit": zod.string().nullish().describe('Attribution string shown in notifications, e.g. (© shayes17\/Getty Images)'),
+  "sourceName": zod.string().nullish().describe('Name of the source\/publisher, e.g. Getty Images'),
+  "artistName": zod.string().nullish().describe('Name of the artist or photographer')
 })
 export const ListWallpapersResponse = zod.array(ListWallpapersResponseItem)
 
@@ -42,7 +46,11 @@ export const GetTodayWallpaperResponse = zod.object({
   "mood": zod.string().describe('Visual tone e.g. Dark, Warm, Moody, Vibrant, Cool'),
   "style": zod.string().describe('Visual style e.g. Holographic, Minimal, Neon, Gradient, Cinematic'),
   "imageUrl": zod.string(),
-  "releaseDate": zod.string().describe('ISO date string')
+  "releaseDate": zod.string().describe('ISO date string'),
+  "locationOrDescription": zod.string().nullish().describe('Where the scene is set or a short description, e.g. Sunrise at Lake Atitlán, Guatemala'),
+  "sourceCredit": zod.string().nullish().describe('Attribution string shown in notifications, e.g. (© shayes17\/Getty Images)'),
+  "sourceName": zod.string().nullish().describe('Name of the source\/publisher, e.g. Getty Images'),
+  "artistName": zod.string().nullish().describe('Name of the artist or photographer')
 })
 
 
@@ -59,7 +67,11 @@ export const GetWallpaperResponse = zod.object({
   "mood": zod.string().describe('Visual tone e.g. Dark, Warm, Moody, Vibrant, Cool'),
   "style": zod.string().describe('Visual style e.g. Holographic, Minimal, Neon, Gradient, Cinematic'),
   "imageUrl": zod.string(),
-  "releaseDate": zod.string().describe('ISO date string')
+  "releaseDate": zod.string().describe('ISO date string'),
+  "locationOrDescription": zod.string().nullish().describe('Where the scene is set or a short description, e.g. Sunrise at Lake Atitlán, Guatemala'),
+  "sourceCredit": zod.string().nullish().describe('Attribution string shown in notifications, e.g. (© shayes17\/Getty Images)'),
+  "sourceName": zod.string().nullish().describe('Name of the source\/publisher, e.g. Getty Images'),
+  "artistName": zod.string().nullish().describe('Name of the artist or photographer')
 })
 
 

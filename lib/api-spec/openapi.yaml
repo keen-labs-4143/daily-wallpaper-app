@@ -169,6 +169,22 @@ components:
         releaseDate:
           type: string
           description: ISO date string
+        locationOrDescription:
+          type: string
+          nullable: true
+          description: "Where the scene is set or a short description, e.g. Sunrise at Lake Atitlán, Guatemala"
+        sourceCredit:
+          type: string
+          nullable: true
+          description: "Attribution string shown in notifications, e.g. (© shayes17/Getty Images)"
+        sourceName:
+          type: string
+          nullable: true
+          description: "Name of the source/publisher, e.g. Getty Images"
+        artistName:
+          type: string
+          nullable: true
+          description: "Name of the artist or photographer"
 
     FavoriteResult:
       type: object

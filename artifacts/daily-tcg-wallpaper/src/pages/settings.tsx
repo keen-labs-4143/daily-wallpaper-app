@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { useSettings } from "@/hooks/use-settings";
 import { Capacitor } from "@capacitor/core";
 import { requestAndScheduleNotification, cancelNotification } from "@/lib/notifications";
+import { useListWallpapers, getListWallpapersQueryKey } from "@workspace/api-client-react";
 
 function Card({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -53,6 +54,9 @@ export default function Settings() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { settings, set } = useSettings();
+  const { data: allWallpapers = [] } = useListWallpapers({
+    query: { queryKey: getListWallpapersQueryKey() },
+  });
 
   // UI-only state (not persisted as user preferences)
   const [scheduleOpen, setScheduleOpen] = useState(false);
@@ -64,7 +68,7 @@ export default function Settings() {
   const handleNotificationsChange = (checked: boolean) => {
     void (async () => {
       if (checked) {
-        const { granted } = await requestAndScheduleNotification();
+        const { granted } = await requestAndScheduleNotification(allWallpapers);
         if (Capacitor.isNativePlatform() && !granted) {
           toast({
             title: "Permission denied",

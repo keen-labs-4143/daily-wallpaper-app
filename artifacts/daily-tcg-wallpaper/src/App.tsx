@@ -1,5 +1,8 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { useEffect } from "react";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Capacitor } from "@capacitor/core";
+import { LocalNotifications } from "@capacitor/local-notifications";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -10,6 +13,9 @@ import Favorites from "@/pages/favorites";
 import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 import RouteGuard from "@/components/layout/route-guard";
+import { useSettings } from "@/hooks/use-settings";
+import { listWallpapers } from "@workspace/api-client-react";
+import { requestAndScheduleNotification } from "@/lib/notifications";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,10 +26,42 @@ const queryClient = new QueryClient({
   },
 });
 
+function NotificationBridge() {
+  const [, setLocation] = useLocation();
+  const { settings } = useSettings();
+
+  // Tapping a notification opens Today's Wallpaper.
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const listenerPromise = LocalNotifications.addListener(
+      "localNotificationActionPerformed",
+      (action) => {
+        const route = (action.notification.extra as { route?: string } | null)?.route;
+        setLocation(route ?? "/today");
+      }
+    );
+    return () => {
+      void listenerPromise.then((l) => l.remove());
+    };
+  }, [setLocation]);
+
+  // Keep the rolling notification schedule fresh with real wallpaper content
+  // whenever the app is opened and notifications are enabled.
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() || !settings.notifications) return;
+    void listWallpapers()
+      .then((wallpapers) => requestAndScheduleNotification(wallpapers))
+      .catch(() => {});
+  }, [settings.notifications]);
+
+  return null;
+}
+
 function Router() {
   return (
     <>
       <RouteGuard />
+      <NotificationBridge />
       <Switch>
         <Route path="/" component={Onboarding} />
         <Route path="/today" component={Today} />

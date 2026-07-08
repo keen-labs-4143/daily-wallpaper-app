@@ -17,6 +17,10 @@ router.get("/wallpapers", async (req, res) => {
       style: w.style,
       imageUrl: w.imageUrl,
       releaseDate: w.releaseDate,
+      locationOrDescription: w.locationOrDescription ?? undefined,
+      sourceCredit: w.sourceCredit ?? undefined,
+      sourceName: w.sourceName ?? undefined,
+      artistName: w.artistName ?? undefined,
     }));
     res.json(mapped);
   } catch (err) {
@@ -44,6 +48,10 @@ router.get("/wallpapers/today", async (req, res) => {
       style: picked.style,
       imageUrl: picked.imageUrl,
       releaseDate: today,
+      locationOrDescription: picked.locationOrDescription ?? undefined,
+      sourceCredit: picked.sourceCredit ?? undefined,
+      sourceName: picked.sourceName ?? undefined,
+      artistName: picked.artistName ?? undefined,
     });
   } catch (err) {
     req.log.error({ err }, "Failed to get today wallpaper");
@@ -73,6 +81,10 @@ router.get("/wallpapers/:id", async (req, res) => {
       style: wallpaper.style,
       imageUrl: wallpaper.imageUrl,
       releaseDate: wallpaper.releaseDate,
+      locationOrDescription: wallpaper.locationOrDescription ?? undefined,
+      sourceCredit: wallpaper.sourceCredit ?? undefined,
+      sourceName: wallpaper.sourceName ?? undefined,
+      artistName: wallpaper.artistName ?? undefined,
     });
   } catch (err) {
     req.log.error({ err }, "Failed to get wallpaper");
