@@ -36,7 +36,7 @@ export default function Today() {
   const removeFav = useRemoveFavorite();
 
   const thisWeek = [...allWallpapers]
-    .sort((a, b) => b.releaseDate.localeCompare(a.releaseDate))
+    .sort((a, b) => (b.releaseDate ?? "").localeCompare(a.releaseDate ?? ""))
     .slice(0, 7);
 
   const toggleFavorite = (id: number) => {

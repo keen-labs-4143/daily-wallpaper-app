@@ -14,8 +14,17 @@ import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 import RouteGuard from "@/components/layout/route-guard";
 import { useSettings } from "@/hooks/use-settings";
-import { listWallpapers } from "@workspace/api-client-react";
+import { listWallpapers, setBaseUrl } from "@workspace/api-client-react";
 import { requestAndScheduleNotification } from "@/lib/notifications";
+
+// On a native Capacitor build the web bundle is served from https://localhost,
+// so relative /api/... URLs would hit the device loopback instead of the
+// production server. VITE_API_BASE_URL is set at build time for Android builds
+// (e.g. "https://<repl-domain>/api") and absent for web/Replit builds.
+if (Capacitor.isNativePlatform()) {
+  const apiBase = import.meta.env.VITE_API_BASE_URL as string | undefined;
+  setBaseUrl(apiBase ?? null);
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
