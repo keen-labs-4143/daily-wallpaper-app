@@ -23,16 +23,17 @@ Commands run from `artifacts/daily-tcg-wallpaper/`:
 
 **To build the APK:**
 1. Clone the repo on a machine with Android Studio installed
-2. Run `pnpm --filter @workspace/daily-tcg-wallpaper run cap:build` from the **Replit terminal**
-   - The script auto-injects `VITE_API_BASE_URL` from `$REPLIT_DEV_DOMAIN` so Android API calls reach the dev server
-   - For a production APK, set `VITE_API_BASE_URL` before running (to the deployed origin, **without** a trailing `/api`):
-     ```
-     export VITE_API_BASE_URL=https://<your-repl-domain>.replit.app
-     ```
-3. Run `pnpm --filter @workspace/daily-tcg-wallpaper run cap:open`
-4. Build / run from Android Studio
+2. Set `VITE_API_BASE_URL` to your backend root URL (**no trailing `/api`**):
+   - PowerShell: `$env:VITE_API_BASE_URL = "https://your-app.replit.app"`
+   - bash/zsh: `export VITE_API_BASE_URL=https://your-app.replit.app`
+   - Replit terminal: skip this step — `cap:build` auto-detects `$REPLIT_DEV_DOMAIN`
+3. Run `pnpm --filter @workspace/daily-tcg-wallpaper run cap:build`
+   - Uses `cap-build.mjs` — cross-platform, works on Windows/PowerShell and Unix
+   - If `VITE_API_BASE_URL` is not set and `$REPLIT_DEV_DOMAIN` is not available, the script exits with a clear error message
+4. Run `pnpm --filter @workspace/daily-tcg-wallpaper run cap:open`
+5. Build / run from Android Studio
 
-> **Why `VITE_API_BASE_URL`?** Capacitor serves the web bundle from `https://localhost` on device, so relative `/api/...` paths hit the device loopback. This env var is prepended to all relative API paths at build time. The generated hooks already include `/api/` in their paths, so the value must be the root origin only — e.g. `https://example.replit.app`, **not** `https://example.replit.app/api`.
+> **Why `VITE_API_BASE_URL`?** Capacitor serves the web bundle from `https://localhost` on device, so relative `/api/...` paths hit the device loopback. The generated hooks already include `/api/` in their paths, so the value must be the root origin only (e.g. `https://example.replit.app`). The build script (`cap-build.mjs`) sets this and the required `PORT`/`BASE_PATH` Vite vars automatically.
 
 App ID: `com.dailytcgwallpaper.app`
 Android project: `artifacts/daily-tcg-wallpaper/android/`
