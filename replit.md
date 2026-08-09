@@ -23,15 +23,16 @@ Commands run from `artifacts/daily-tcg-wallpaper/`:
 
 **To build the APK:**
 1. Clone the repo on a machine with Android Studio installed
-2. Set `VITE_API_BASE_URL` to your deployed backend origin, e.g.:
-   ```
-   export VITE_API_BASE_URL=https://<your-repl-domain>/api
-   ```
-3. Run `pnpm --filter @workspace/daily-tcg-wallpaper run cap:build`
-4. Run `pnpm --filter @workspace/daily-tcg-wallpaper run cap:open`
-5. Build / run from Android Studio
+2. Run `pnpm --filter @workspace/daily-tcg-wallpaper run cap:build` from the **Replit terminal**
+   - The script auto-injects `VITE_API_BASE_URL` from `$REPLIT_DEV_DOMAIN` so Android API calls reach the dev server
+   - For a production APK, set `VITE_API_BASE_URL` before running (to the deployed origin, **without** a trailing `/api`):
+     ```
+     export VITE_API_BASE_URL=https://<your-repl-domain>.replit.app
+     ```
+3. Run `pnpm --filter @workspace/daily-tcg-wallpaper run cap:open`
+4. Build / run from Android Studio
 
-> **Why `VITE_API_BASE_URL`?** Capacitor serves the web bundle from `https://localhost` on the device, so relative `/api/...` paths would hit the loopback instead of the server. Setting this env var tells the app to use an absolute URL for API calls on native builds. Web/Replit builds leave it unset and continue using relative paths through the existing proxy.
+> **Why `VITE_API_BASE_URL`?** Capacitor serves the web bundle from `https://localhost` on device, so relative `/api/...` paths hit the device loopback. This env var is prepended to all relative API paths at build time. The generated hooks already include `/api/` in their paths, so the value must be the root origin only — e.g. `https://example.replit.app`, **not** `https://example.replit.app/api`.
 
 App ID: `com.dailytcgwallpaper.app`
 Android project: `artifacts/daily-tcg-wallpaper/android/`
