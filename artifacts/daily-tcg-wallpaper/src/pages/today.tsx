@@ -15,7 +15,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
 import { COMMUNITY_WALLPAPERS } from "@/data/community-wallpapers";
-import { Layers, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Tab = "week" | "collection" | "community";
@@ -35,9 +35,23 @@ export default function Today() {
   const addFav = useAddFavorite();
   const removeFav = useRemoveFavorite();
 
-  const thisWeek = [...allWallpapers]
-    .sort((a, b) => (b.releaseDate ?? "").localeCompare(a.releaseDate ?? ""))
-    .slice(0, 7);
+  const sorted = [...allWallpapers].sort(
+    (a, b) => (b.releaseDate ?? "").localeCompare(a.releaseDate ?? "")
+  );
+
+  const thisWeek = sorted.slice(0, 7);
+
+  // Full archive grouped by "Month YYYY"
+  const archiveGroups = sorted.reduce<Record<string, typeof sorted>>((acc, w) => {
+    const label = w.releaseDate
+      ? new Date(w.releaseDate + "T00:00:00").toLocaleDateString("en-US", {
+          month: "long",
+          year: "numeric",
+        })
+      : "Unknown";
+    (acc[label] ??= []).push(w);
+    return acc;
+  }, {});
 
   const toggleFavorite = (id: number) => {
     const isFav = favorites.includes(id);
@@ -155,15 +169,36 @@ export default function Today() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="flex flex-col items-center justify-center pt-32 px-8 text-center"
+                className="px-4 pt-4 pb-4 space-y-6"
               >
-                <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-5">
-                  <Layers size={28} className="text-white/30" />
-                </div>
-                <p className="text-white/60 font-semibold text-lg mb-2">Your collection</p>
-                <p className="text-white/30 text-sm leading-relaxed">
-                  Save your favourite wallpapers and they will appear here.
-                </p>
+                {isLoading
+                  ? Array.from({ length: 4 }).map((_, i) => (
+                      <Skeleton key={i} className="w-full aspect-[3/4] rounded-2xl bg-white/5" />
+                    ))
+                  : Object.entries(archiveGroups).map(([month, group]) => (
+                      <div key={month}>
+                        <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-3 px-1">
+                          {month}
+                        </p>
+                        <div className="space-y-4">
+                          {group.map((w, i) => (
+                            <FeedCard
+                              key={w.id}
+                              id={w.id}
+                              title={w.title}
+                              mood={w.mood}
+                              style={w.style}
+                              imageUrl={w.imageUrl}
+                              subtitle={`${w.mood} · ${w.style}`}
+                              isFavorited={favorites.includes(w.id)}
+                              onTap={() => setLocation(`/preview/${w.id}`)}
+                              onFavorite={() => toggleFavorite(w.id)}
+                              index={i}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    ))}
               </motion.div>
             )}
 
