@@ -182,7 +182,7 @@ export default function Settings() {
           <Card>
             <Row
               label="Automatic wallpaper download"
-              sublabel="Save new wallpapers to your device daily"
+              sublabel="Save new wallpapers to your device after each update"
               noBorder
               right={
                 <Switch
