@@ -205,16 +205,6 @@ export default function Settings() {
               />
             </div>
 
-            {/* Landscape wallpaper */}
-            <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/[0.06]">
-              <p className="text-white font-medium text-[15px]">Landscape wallpaper</p>
-              <Checkbox
-                checked={settings.landscape}
-                onCheckedChange={(v) => set("landscape", !!v)}
-                className="w-5 h-5 rounded border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-              />
-            </div>
-
             {/* Auto-start */}
             <div className="px-4 py-3.5">
               <p className="text-white/50 text-[13px] mb-3 leading-snug">
