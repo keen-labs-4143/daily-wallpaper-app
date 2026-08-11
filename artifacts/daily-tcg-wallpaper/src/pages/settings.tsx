@@ -5,7 +5,7 @@ import { MobileContainer } from "@/components/layout/mobile-container";
 import { UpdateMethodSheet } from "@/components/settings/update-method-sheet";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronLeft, ChevronDown, ExternalLink, Search, LayoutGrid } from "lucide-react";
+import { ChevronLeft, ChevronDown, ExternalLink, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useSettings } from "@/hooks/use-settings";
@@ -276,25 +276,6 @@ export default function Settings() {
                 />
               }
             />
-          </Card>
-
-          {/* Card 4 — Widget */}
-          <Card>
-            <div className="px-4 pt-4 pb-5">
-              <div className="flex items-center gap-2 mb-3">
-                <LayoutGrid size={16} className="text-white/50" />
-                <p className="text-white font-semibold text-[15px]">Widget</p>
-              </div>
-              <button
-                onClick={() => comingSoon("Widget")}
-                className="w-full py-3 rounded-xl bg-white/[0.08] text-white font-semibold text-[15px] hover:bg-white/[0.13] transition-colors mb-3"
-              >
-                Add Widget to Home Screen
-              </button>
-              <p className="text-white/40 text-xs leading-relaxed">
-                Adds a widget that shows the information of the current wallpaper.
-              </p>
-            </div>
           </Card>
 
           {/* Footer */}
