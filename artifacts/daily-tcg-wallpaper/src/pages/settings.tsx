@@ -1,14 +1,12 @@
-import React, { useState } from "react";
+import React from "react";
 import { useLocation } from "wouter";
-import { motion, AnimatePresence } from "framer-motion";
 import { MobileContainer } from "@/components/layout/mobile-container";
-import { UpdateMethodSheet } from "@/components/settings/update-method-sheet";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronLeft, ChevronDown } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { useSettings } from "@/hooks/use-settings";
+import { useSettings, UpdateFrequency } from "@/hooks/use-settings";
 import { Capacitor } from "@capacitor/core";
 import { requestAndScheduleNotification, cancelNotification } from "@/lib/notifications";
 import { useListWallpapers, getListWallpapersQueryKey } from "@workspace/api-client-react";
@@ -58,13 +56,6 @@ export default function Settings() {
     query: { queryKey: getListWallpapersQueryKey() },
   });
 
-  // UI-only state (not persisted as user preferences)
-  const [scheduleOpen, setScheduleOpen] = useState(false);
-  const [learnMoreOpen, setLearnMoreOpen] = useState(false);
-
-  const comingSoon = (label: string) =>
-    toast({ title: label, description: "This feature is coming soon." });
-
   const handleNotificationsChange = (checked: boolean) => {
     void (async () => {
       if (checked) {
@@ -87,7 +78,6 @@ export default function Settings() {
   return (
     <MobileContainer>
       <div className="flex-1 relative flex flex-col overflow-hidden">
-        <UpdateMethodSheet open={learnMoreOpen} onClose={() => setLearnMoreOpen(false)} />
         <div className="flex-1 overflow-y-auto pb-16 no-scrollbar">
         {/* Header */}
         <div className="flex items-center gap-2 px-4 pt-12 pb-5">
@@ -145,67 +135,40 @@ export default function Settings() {
               </div>
             </div>
 
-            {/* Update Method */}
-            <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/[0.06]">
-              <p className="text-white font-medium text-[15px]">Update Method</p>
-              <button
-                onClick={() => setLearnMoreOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 text-white/80 text-xs font-semibold hover:bg-white/15 transition-colors"
-              >
-                <span className="w-3.5 h-3.5 rounded-full border border-white/60 flex items-center justify-center text-[9px] font-bold">i</span>
-                Learn More
-              </button>
-            </div>
-
-            {/* Smart Scheduling dropdown */}
-            <div className="px-4 py-3">
-              <button
-                onClick={() => setScheduleOpen((v) => !v)}
-                className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-white/[0.07] hover:bg-white/10 transition-colors"
-              >
-                <div className="text-left">
-                  <p className="text-white font-medium text-[15px]">Smart scheduling</p>
-                  <p className="text-white/45 text-xs mt-0.5">Use default scheduling</p>
-                </div>
-                <ChevronDown
-                  size={18}
-                  className={cn(
-                    "text-white/50 transition-transform duration-200",
-                    scheduleOpen && "rotate-180"
-                  )}
-                />
-              </button>
-              <AnimatePresence>
-                {scheduleOpen && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
+            {/* Update Frequency */}
+            <div className="px-4 pb-4">
+              <div className="mb-2.5">
+                <p className="text-white font-medium text-[15px]">Update frequency</p>
+                <p className="text-white/40 text-xs mt-0.5">How often your wallpaper changes automatically.</p>
+              </div>
+              {/* Segmented selector */}
+              <div className="flex gap-2">
+                {(["daily", "weekly", "monthly"] as UpdateFrequency[]).map((freq) => (
+                  <button
+                    key={freq}
+                    onClick={() => set("updateFrequency", freq)}
+                    className={cn(
+                      "flex-1 py-2.5 rounded-xl text-sm font-semibold capitalize transition-all duration-200",
+                      settings.updateFrequency === freq
+                        ? "bg-primary text-white shadow-[0_2px_12px_rgba(139,92,246,0.35)]"
+                        : "bg-white/[0.07] text-white/50 hover:bg-white/[0.12] hover:text-white/80"
+                    )}
                   >
-                    <div className="mt-2 rounded-xl bg-white/[0.05] divide-y divide-white/[0.06] text-sm text-white/70 px-4 py-2">
-                      <p className="py-2.5 text-white/40 text-xs uppercase tracking-wider font-semibold">
-                        Schedule options (coming soon)
-                      </p>
-                      {["Smart scheduling", "Every hour", "Every 3 hours", "Every 6 hours", "Daily"].map(
-                        (opt) => (
-                          <button
-                            key={opt}
-                            onClick={() => {
-                              setScheduleOpen(false);
-                              comingSoon("Schedule: " + opt);
-                            }}
-                            className="w-full text-left py-2.5 hover:text-white transition-colors"
-                          >
-                            {opt}
-                          </button>
-                        )
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    {freq.charAt(0).toUpperCase() + freq.slice(1)}
+                  </button>
+                ))}
+              </div>
+              {/* Contextual hint */}
+              {settings.updateFrequency === "weekly" && (
+                <p className="text-white/35 text-xs mt-2.5 leading-snug">
+                  Your wallpaper will change once per week.
+                </p>
+              )}
+              {settings.updateFrequency === "monthly" && (
+                <p className="text-white/35 text-xs mt-2.5 leading-snug">
+                  Your wallpaper will change once per month.
+                </p>
+              )}
             </div>
           </Card>
 

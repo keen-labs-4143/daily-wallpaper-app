@@ -2,10 +2,13 @@ import { useState } from "react";
 
 const STORAGE_KEY = "dtcg:settings";
 
+export type UpdateFrequency = "daily" | "weekly" | "monthly";
+
 export interface AppSettings {
   autoUpdate: boolean;
   setHome: boolean;
   setLock: boolean;
+  updateFrequency: UpdateFrequency;
   autoDownload: boolean;
   notifications: boolean;
 }
@@ -14,6 +17,7 @@ const DEFAULTS: AppSettings = {
   autoUpdate: true,
   setHome: true,
   setLock: true,
+  updateFrequency: "daily",
   autoDownload: false,
   notifications: true,
 };
