@@ -6,7 +6,6 @@ export interface AppSettings {
   autoUpdate: boolean;
   setHome: boolean;
   setLock: boolean;
-  landscape: boolean;
   autoDownload: boolean;
   notifications: boolean;
 }
@@ -15,7 +14,6 @@ const DEFAULTS: AppSettings = {
   autoUpdate: true,
   setHome: true,
   setLock: true,
-  landscape: false,
   autoDownload: false,
   notifications: true,
 };

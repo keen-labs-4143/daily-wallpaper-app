@@ -5,7 +5,7 @@ import { MobileContainer } from "@/components/layout/mobile-container";
 import { UpdateMethodSheet } from "@/components/settings/update-method-sheet";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronLeft, ChevronDown, ExternalLink, Search } from "lucide-react";
+import { ChevronLeft, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useSettings } from "@/hooks/use-settings";
@@ -105,7 +105,7 @@ export default function Settings() {
 
           {/* Card 1 — Wallpaper update settings */}
           <Card>
-            {/* Automatic wallpaper update */}
+            {/* Automatic wallpaper update toggle */}
             {/*
               TODO (Android): Wire this toggle to a WorkManager PeriodicWorkRequest
               so wallpapers update in the background without the app being open.
@@ -122,6 +122,29 @@ export default function Settings() {
               }
             />
 
+            {/* Apply-to targets — only meaningful for auto-updates */}
+            <div className="mx-4 mb-3 rounded-xl bg-white/[0.05] overflow-hidden border border-white/[0.06]">
+              <p className="px-4 pt-3 pb-1.5 text-[11px] font-semibold uppercase tracking-widest text-white/35">
+                Apply daily rotation to
+              </p>
+              <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
+                <p className="text-white font-medium text-[14px]">Home Screen</p>
+                <Checkbox
+                  checked={settings.setHome}
+                  onCheckedChange={(v) => set("setHome", !!v)}
+                  className="w-5 h-5 rounded border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                />
+              </div>
+              <div className="flex items-center justify-between px-4 py-3">
+                <p className="text-white font-medium text-[14px]">Lock Screen</p>
+                <Checkbox
+                  checked={settings.setLock}
+                  onCheckedChange={(v) => set("setLock", !!v)}
+                  className="w-5 h-5 rounded border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                />
+              </div>
+            </div>
+
             {/* Update Method */}
             <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/[0.06]">
               <p className="text-white font-medium text-[15px]">Update Method</p>
@@ -135,7 +158,7 @@ export default function Settings() {
             </div>
 
             {/* Smart Scheduling dropdown */}
-            <div className="px-4 py-3 border-b border-white/[0.06]">
+            <div className="px-4 py-3">
               <button
                 onClick={() => setScheduleOpen((v) => !v)}
                 className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-white/[0.07] hover:bg-white/10 transition-colors"
@@ -183,49 +206,6 @@ export default function Settings() {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
-
-            {/* Set on Home screen */}
-            <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/[0.06]">
-              <p className="text-white font-medium text-[15px]">Set on Home screen</p>
-              <Checkbox
-                checked={settings.setHome}
-                onCheckedChange={(v) => set("setHome", !!v)}
-                className="w-5 h-5 rounded border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-              />
-            </div>
-
-            {/* Set on Lock screen */}
-            <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/[0.06]">
-              <p className="text-white font-medium text-[15px]">Set on Lock screen</p>
-              <Checkbox
-                checked={settings.setLock}
-                onCheckedChange={(v) => set("setLock", !!v)}
-                className="w-5 h-5 rounded border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-              />
-            </div>
-
-            {/* Auto-start */}
-            <div className="px-4 py-3.5">
-              <p className="text-white/50 text-[13px] mb-3 leading-snug">
-                Allow app to auto start from device settings
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => comingSoon("Open settings")}
-                  className="flex-1 py-2.5 rounded-xl bg-white/[0.08] text-white/80 text-sm font-medium hover:bg-white/[0.13] transition-colors flex items-center justify-center gap-1.5"
-                >
-                  <ExternalLink size={13} />
-                  Open settings
-                </button>
-                <button
-                  onClick={() => comingSoon("Search on Web")}
-                  className="flex-1 py-2.5 rounded-xl bg-white/[0.08] text-white/80 text-sm font-medium hover:bg-white/[0.13] transition-colors flex items-center justify-center gap-1.5"
-                >
-                  <Search size={13} />
-                  Search on Web
-                </button>
-              </div>
             </div>
           </Card>
 
