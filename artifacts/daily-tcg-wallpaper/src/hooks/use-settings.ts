@@ -9,6 +9,7 @@ export interface AppSettings {
   setHome: boolean;
   setLock: boolean;
   updateFrequency: UpdateFrequency;
+  updateTime: string; // "HH:MM" 24-hour format
   autoDownload: boolean;
   notifications: boolean;
 }
@@ -18,6 +19,7 @@ const DEFAULTS: AppSettings = {
   setHome: true,
   setLock: true,
   updateFrequency: "daily",
+  updateTime: "08:00",
   autoDownload: false,
   notifications: true,
 };

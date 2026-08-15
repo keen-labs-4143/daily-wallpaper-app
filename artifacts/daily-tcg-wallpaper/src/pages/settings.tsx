@@ -48,6 +48,35 @@ function Row({
   );
 }
 
+function formatTime(timeStr: string): string {
+  const [h, m] = timeStr.split(":").map(Number);
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+}
+
+function computeNextUpdate(frequency: UpdateFrequency, timeStr: string): string {
+  const [h, m] = timeStr.split(":").map(Number);
+  const now = new Date();
+  const t = new Date();
+
+  if (frequency === "daily") {
+    t.setHours(h, m, 0, 0);
+    if (t <= now) t.setDate(t.getDate() + 1);
+  } else if (frequency === "weekly") {
+    t.setDate(t.getDate() + 7);
+    t.setHours(h, m, 0, 0);
+  } else {
+    // monthly: 1st of next month
+    t.setMonth(t.getMonth() + 1, 1);
+    t.setHours(h, m, 0, 0);
+  }
+
+  const date = t.toLocaleDateString("en-US", { month: "long", day: "numeric" });
+  const time = t.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  return `${date} at ${time}`;
+}
+
 export default function Settings() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -116,7 +145,7 @@ export default function Settings() {
             <div className={cn("transition-opacity duration-200", !settings.autoUpdate && "opacity-40 pointer-events-none")}>
             <div className="mx-4 mb-3 rounded-xl bg-white/[0.05] overflow-hidden border border-white/[0.06]">
               <p className="px-4 pt-3 pb-1.5 text-[11px] font-semibold uppercase tracking-widest text-white/35">
-                Apply daily rotation to
+                Apply automatic updates to
               </p>
               <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
                 <p className="text-white font-medium text-[14px]">Home Screen</p>
@@ -171,6 +200,34 @@ export default function Settings() {
                 </p>
               )}
             </div>
+
+            {/* Update Time */}
+            <div className="flex items-center justify-between px-4 py-3.5 border-t border-white/[0.06]">
+              <div>
+                <p className="text-white font-medium text-[15px]">Update time</p>
+                <p className="text-white/40 text-xs mt-0.5">When the automatic update runs.</p>
+              </div>
+              <div className="relative">
+                <div className="px-3.5 py-1.5 rounded-full bg-white/10 text-white text-sm font-semibold pointer-events-none select-none">
+                  {formatTime(settings.updateTime)}
+                </div>
+                <input
+                  type="time"
+                  value={settings.updateTime}
+                  onChange={(e) => e.target.value && set("updateTime", e.target.value)}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                />
+              </div>
+            </div>
+
+            {/* Next update */}
+            <div className="flex items-center justify-between px-4 py-3 mx-0 mb-3 border-t border-white/[0.06]">
+              <p className="text-white/40 text-[13px]">Next update</p>
+              <p className="text-white/70 text-[13px] font-medium">
+                {computeNextUpdate(settings.updateFrequency, settings.updateTime)}
+              </p>
+            </div>
+
             </div>{/* end auto-update dependent section */}
           </Card>
 
@@ -183,8 +240,8 @@ export default function Settings() {
           */}
           <Card>
             <Row
-              label="Automatic wallpaper download"
-              sublabel="Save new wallpapers to your device after each update"
+              label="Save updated wallpapers"
+              sublabel="Automatically save each new wallpaper to your device."
               noBorder
               right={
                 <Switch
