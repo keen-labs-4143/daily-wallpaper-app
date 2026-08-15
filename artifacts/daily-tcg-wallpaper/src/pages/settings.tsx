@@ -112,7 +112,8 @@ export default function Settings() {
               }
             />
 
-            {/* Apply-to targets — only meaningful for auto-updates */}
+            {/* Apply-to targets + frequency — grayed out when auto-update is off */}
+            <div className={cn("transition-opacity duration-200", !settings.autoUpdate && "opacity-40 pointer-events-none")}>
             <div className="mx-4 mb-3 rounded-xl bg-white/[0.05] overflow-hidden border border-white/[0.06]">
               <p className="px-4 pt-3 pb-1.5 text-[11px] font-semibold uppercase tracking-widest text-white/35">
                 Apply daily rotation to
@@ -170,6 +171,7 @@ export default function Settings() {
                 </p>
               )}
             </div>
+            </div>{/* end auto-update dependent section */}
           </Card>
 
           {/* Card 2 — Automatic wallpaper download */}
