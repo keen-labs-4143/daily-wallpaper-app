@@ -193,21 +193,27 @@ export default function Preview() {
 
   const handleSet = () => setSetWallpaperOpen(true);
 
-  const handleSetTarget = (target: string) => {
+  const TARGET_LABELS: Record<string, string> = {
+    home: "home screen",
+    lock: "lock screen",
+    both: "home and lock screens",
+  };
+
+  const handleSetTarget = (target: "home" | "lock" | "both") => {
     setSetWallpaperOpen(false);
-    if (Capacitor.isNativePlatform()) {
-      if (isSetWallpaperSupported()) {
-        // SetWallpaperPlugin is installed — attempt native set
-        void setWallpaper(wallpaper?.imageUrl ?? "", target as "home" | "lock" | "both")
-          .then(() => toast({ title: "Wallpaper set", description: `Applied to ${target}.` }))
-          .catch(() => toast({ title: "Could not set wallpaper", description: "Please try again.", variant: "destructive" }));
-      } else {
-        // TODO: Remove once SetWallpaperPlugin is registered in MainActivity.java
-        // See lib/wallpaper-native.ts for implementation instructions.
-        toast({ title: "Coming soon", description: "Native wallpaper setting is in development." });
-      }
+    const label = TARGET_LABELS[target] ?? target;
+    if (isSetWallpaperSupported()) {
+      void setWallpaper(wallpaper?.imageUrl ?? "", target)
+        .then(() => toast({ title: "Wallpaper set", description: `Applied to your ${label}.` }))
+        .catch((err: unknown) => {
+          const msg = err instanceof Error ? err.message : "Please try again.";
+          toast({ title: "Could not set wallpaper", description: msg, variant: "destructive" });
+        });
     } else {
-      toast({ title: "Wallpaper set", description: `Applied to ${target}.` });
+      toast({
+        title: "Android app required",
+        description: "Wallpaper setting is available in the Android app.",
+      });
     }
   };
 
@@ -437,9 +443,9 @@ export default function Preview() {
                 </div>
                 <div className="flex flex-col gap-3">
                   {[
-                    { label: "Home Screen",  value: "Home Screen" },
-                    { label: "Lock Screen",  value: "Lock Screen" },
-                    { label: "Both Screens", value: "Home Screen and Lock Screen" },
+                    { label: "Home Screen",  value: "home"  as const },
+                    { label: "Lock Screen",  value: "lock"  as const },
+                    { label: "Both Screens", value: "both"  as const },
                   ].map(({ label, value }) => (
                     <button
                       key={label}
