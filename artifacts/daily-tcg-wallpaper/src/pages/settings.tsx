@@ -207,17 +207,13 @@ export default function Settings() {
                 <p className="text-white font-medium text-[15px]">Update time</p>
                 <p className="text-white/40 text-xs mt-0.5">When the automatic update runs.</p>
               </div>
-              <div className="relative">
-                <div className="px-3.5 py-1.5 rounded-full bg-white/10 text-white text-sm font-semibold pointer-events-none select-none">
-                  {formatTime(settings.updateTime)}
-                </div>
-                <input
-                  type="time"
-                  value={settings.updateTime}
-                  onChange={(e) => e.target.value && set("updateTime", e.target.value)}
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                />
-              </div>
+              <input
+                type="time"
+                value={settings.updateTime}
+                onChange={(e) => e.target.value && set("updateTime", e.target.value)}
+                className="px-3 py-1.5 rounded-full bg-white/10 text-white text-sm font-semibold border-0 outline-none cursor-pointer"
+                style={{ colorScheme: "dark" }}
+              />
             </div>
 
             {/* Next update */}
