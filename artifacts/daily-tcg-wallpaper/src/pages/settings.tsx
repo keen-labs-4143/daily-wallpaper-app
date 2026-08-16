@@ -219,7 +219,7 @@ export default function Settings() {
             {/* Next update */}
             <div className="flex items-center justify-between px-4 py-3 mx-0 mb-3 border-t border-white/[0.06]">
               <p className="text-white/40 text-[13px]">Next update</p>
-              <p className="text-white/70 text-[13px] font-medium">
+              <p className="text-white/40 text-[13px]">
                 {computeNextUpdate(settings.updateFrequency, settings.updateTime)}
               </p>
             </div>
