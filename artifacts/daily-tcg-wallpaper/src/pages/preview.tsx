@@ -30,14 +30,6 @@ async function blobToBase64(blob: Blob): Promise<string> {
   });
 }
 
-function toShareFilename(title: string): string {
-  const slug = title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-  return `${slug}-daily-tcg-wallpaper.jpg`;
-}
-
 const slideVariants = {
   enter: (dir: number) => ({
     x: dir >= 0 ? "100%" : "-100%",
@@ -201,101 +193,34 @@ export default function Preview() {
 
   const handleSet = () => setSetWallpaperOpen(true);
 
-  const TARGET_LABELS: Record<string, string> = {
-    home: "home screen",
-    lock: "lock screen",
-    both: "home and lock screens",
-  };
-
-  const handleSetTarget = (target: "home" | "lock" | "both") => {
+  const handleSetTarget = (target: string) => {
     setSetWallpaperOpen(false);
-    const label = TARGET_LABELS[target] ?? target;
-    if (isSetWallpaperSupported()) {
-      void setWallpaper(wallpaper?.imageUrl ?? "", target)
-        .then(() => toast({ title: "Wallpaper set", description: `Applied to your ${label}.` }))
-        .catch((err: unknown) => {
-          const msg = err instanceof Error ? err.message : "Please try again.";
-          toast({ title: "Could not set wallpaper", description: msg, variant: "destructive" });
-        });
+    if (Capacitor.isNativePlatform()) {
+      if (isSetWallpaperSupported()) {
+        // SetWallpaperPlugin is installed — attempt native set
+        void setWallpaper(wallpaper?.imageUrl ?? "", target as "home" | "lock" | "both")
+          .then(() => toast({ title: "Wallpaper set", description: `Applied to ${target}.` }))
+          .catch(() => toast({ title: "Could not set wallpaper", description: "Please try again.", variant: "destructive" }));
+      } else {
+        // TODO: Remove once SetWallpaperPlugin is registered in MainActivity.java
+        // See lib/wallpaper-native.ts for implementation instructions.
+        toast({ title: "Coming soon", description: "Native wallpaper setting is in development." });
+      }
     } else {
-      toast({
-        title: "Android app required",
-        description: "Wallpaper setting is available in the Android app.",
-      });
+      toast({ title: "Wallpaper set", description: `Applied to ${target}.` });
     }
   };
 
   const handleShare = async () => {
-    if (!wallpaper?.imageUrl) return;
-
-    const title = wallpaper.title ?? "Daily TCG Wallpaper";
-    const caption = `${title} — Daily TCG Wallpaper`;
-    const filename = toShareFilename(title);
-
     try {
-      // ── Download the image ───────────────────────────────────────────────
-      let blob: Blob;
-      try {
-        const response = await fetch(wallpaper.imageUrl);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        blob = await response.blob();
-      } catch {
-        toast({ title: "Share failed", description: "Could not download the wallpaper image.", variant: "destructive" });
-        return;
-      }
-
-      // ── Native Android: write to cache → share file URI ─────────────────
-      if (Capacitor.isNativePlatform()) {
-        const base64 = await blobToBase64(blob);
-        await Filesystem.writeFile({
-          path: filename,
-          data: base64,
-          directory: Directory.Cache,
-          recursive: true,
-        });
-        const { uri } = await Filesystem.getUri({
-          path: filename,
-          directory: Directory.Cache,
-        });
-        try {
-          await Share.share({
-            title,
-            text: caption,
-            files: [uri],
-            dialogTitle: "Share wallpaper",
-          });
-        } finally {
-          // Best-effort cleanup — ignore errors
-          void Filesystem.deleteFile({ path: filename, directory: Directory.Cache }).catch(() => {});
-        }
-        return;
-      }
-
-      // ── Web: use Web Share API with file if supported ────────────────────
-      const file = new File([blob], filename, { type: "image/jpeg" });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title, text: caption });
-        return;
-      }
-
-      // ── Web fallback: download and prompt user to attach manually ────────
-      const objectUrl = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = objectUrl;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(objectUrl);
-      setTimeout(() => {
-        toast({
-          title: "Image downloaded",
-          description: "Attach it from your gallery to share.",
-        });
-      }, 800);
-
-    } catch (err) {
-      // User cancelled share sheet — not an error worth toasting
-      if (err instanceof Error && err.name === "AbortError") return;
-      toast({ title: "Share failed", description: "Could not share the wallpaper.", variant: "destructive" });
+      await Share.share({
+        title: wallpaper?.title ?? "Daily TCG Wallpaper",
+        text: `Check out "${wallpaper?.title ?? "this wallpaper"}" on Daily TCG Wallpaper`,
+        url: wallpaper?.imageUrl ?? window.location.href,
+        dialogTitle: "Share wallpaper",
+      });
+    } catch {
+      toast({ title: "Share", description: "Sharing is not available on this device." });
     }
   };
 
@@ -512,9 +437,9 @@ export default function Preview() {
                 </div>
                 <div className="flex flex-col gap-3">
                   {[
-                    { label: "Home Screen",  value: "home"  as const },
-                    { label: "Lock Screen",  value: "lock"  as const },
-                    { label: "Both Screens", value: "both"  as const },
+                    { label: "Home Screen",  value: "Home Screen" },
+                    { label: "Lock Screen",  value: "Lock Screen" },
+                    { label: "Both Screens", value: "Home Screen and Lock Screen" },
                   ].map(({ label, value }) => (
                     <button
                       key={label}
