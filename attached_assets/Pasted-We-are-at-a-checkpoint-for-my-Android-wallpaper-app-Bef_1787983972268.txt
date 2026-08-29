@@ -1,0 +1,42 @@
+We are at a checkpoint for my Android wallpaper app.
+
+Before writing code, please create a clear implementation plan only. Do not make changes yet.
+
+Context:
+- The Replit web app appears to work.
+- The Android Capacitor build may show different behavior than the web app.
+- On Android, I have seen issues like Invalid Date, purple/missing wallpaper placeholders, and notifications using wallpaper names/credits that may not match the visible app state.
+- AI-generated wallpaper titles and artist/source credits are acceptable for MVP, but they need to come from a consistent wallpaper feed/data source, not random one-off fallback logic.
+- I eventually need settings, daily wallpaper scheduling, manual Set Wallpaper, notifications, and a content feed for fresh wallpapers.
+- For now, I want to stabilize the app before adding background auto-updates.
+
+Please inspect the current project and make a chronological development plan for the next implementation step.
+
+Focus on:
+1. Confirming whether Android and Replit web are using the same wallpaper data source.
+2. Identifying why Android might show Invalid Date or missing wallpaper images.
+3. Confirming where notification titles/credits are coming from.
+4. Defining a stable wallpaper feed structure.
+5. Making sure dates are validated safely.
+6. Making Android match the Replit web app.
+7. Keeping AI-generated titles/credits allowed, but consistent.
+8. Avoiding major UI redesign.
+9. Avoiding background auto-wallpaper updates for now.
+
+Fix rules for the eventual implementation:
+- Never show Invalid Date.
+- AI-generated wallpaper titles and artist/source credits are acceptable for MVP, but they must come from the wallpaper feed and stay consistent across Today, Preview, This Week, Favorites, and Notifications.
+- Do not randomly generate different wallpaper names or artist credits at notification time.
+- If no valid wallpaper exists, show generic copy like “Today’s wallpaper.”
+- If an image fails to load, log the failing image URL/path.
+- Make Android match the Replit web app.
+
+In your plan, tell me:
+- likely root causes
+- files you need to inspect
+- files you expect to change
+- the safest order to implement fixes
+- how I should test it on Android after the changes
+- what should be left for later
+
+Do not code until I approve the plan.
