@@ -167,8 +167,9 @@ components:
         imageUrl:
           type: string
         releaseDate:
-          type: string
-          description: ISO date string
+          type: ["string", "null"]
+          format: date
+          description: ISO calendar date (YYYY-MM-DD), or null when source data has no valid date
         locationOrDescription:
           type: string
           nullable: true

@@ -5,6 +5,12 @@ export interface CommunityItem {
   style: string;
   author: string;
   imageUrl: string;
+  /** Community is intentionally local-only; these fields match the API record shape. */
+  releaseDate?: string | null;
+  locationOrDescription?: string | null;
+  sourceCredit?: string | null;
+  sourceName?: string | null;
+  artistName?: string | null;
 }
 
 const P = (seed: string) => `https://picsum.photos/seed/${seed}/1080/1920`;

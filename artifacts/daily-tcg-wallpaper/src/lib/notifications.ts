@@ -1,14 +1,9 @@
 import { Capacitor } from "@capacitor/core";
 import { LocalNotifications } from "@capacitor/local-notifications";
+import type { WallpaperRecord } from "@/lib/wallpaper";
 
 const NOTIF_BASE_ID = 1001;
 const DAYS_AHEAD = 14;
-
-export interface NotificationWallpaper {
-  title: string;
-  locationOrDescription?: string | null;
-  sourceCredit?: string | null;
-}
 
 /**
  * Picks the wallpaper for a given date using the same deterministic
@@ -22,8 +17,8 @@ function pickWallpaperForDate<T>(wallpapers: T[], date: Date): T {
   return wallpapers[dayOfYear % wallpapers.length];
 }
 
-function formatBody(wallpaper: NotificationWallpaper): string {
-  const lines = [wallpaper.locationOrDescription, wallpaper.sourceCredit].filter(
+function formatBody(wallpaper: WallpaperRecord): string {
+  const lines = [wallpaper.description, wallpaper.sourceCredit].filter(
     (line): line is string => Boolean(line && line.trim())
   );
   return lines.length ? lines.join("\n") : "Today's wallpaper is here.";
@@ -41,7 +36,7 @@ function allNotificationIds(): { id: number }[] {
  * persisted so it takes effect when the user opens the Android build.
  */
 export async function requestAndScheduleNotification(
-  wallpapers: NotificationWallpaper[]
+  wallpapers: WallpaperRecord[]
 ): Promise<{ granted: boolean }> {
   if (!Capacitor.isNativePlatform()) return { granted: false };
 
@@ -51,7 +46,12 @@ export async function requestAndScheduleNotification(
   // Clear any existing schedule before re-scheduling
   await LocalNotifications.cancel({ notifications: allNotificationIds() }).catch(() => {});
 
-  if (!wallpapers.length) return { granted: true };
+  if (!wallpapers.length) {
+    console.warn("[wallpaper] Notification schedule skipped because the feed is empty", {
+      request: "GET /api/wallpapers",
+    });
+    return { granted: true };
+  }
 
   const notifications = [];
   for (let i = 0; i < DAYS_AHEAD; i++) {

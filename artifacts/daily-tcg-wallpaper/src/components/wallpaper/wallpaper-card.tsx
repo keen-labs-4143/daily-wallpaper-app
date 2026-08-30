@@ -8,12 +8,13 @@ interface WallpaperCardProps {
   title: string;
   mood: string;
   style: string;
-  imageUrl?: string;
+  imageUrl?: string | null;
+  subtitle?: string;
   shimmer?: boolean;
   className?: string;
 }
 
-export function WallpaperCard({ id, title, mood, style, imageUrl, shimmer, className }: WallpaperCardProps) {
+export function WallpaperCard({ id, title, mood, style, imageUrl, subtitle, shimmer, className }: WallpaperCardProps) {
   const gradient = generateGradient(mood, style, id);
   const [imgError, setImgError] = useState(false);
   const showImage = !!imageUrl && !imgError;
@@ -31,7 +32,14 @@ export function WallpaperCard({ id, title, mood, style, imageUrl, shimmer, class
           <img
             src={imageUrl}
             alt={title}
-            onError={() => setImgError(true)}
+            onError={() => {
+              console.warn("[wallpaper] Image failed to load", {
+                id,
+                url: imageUrl,
+                context: "WallpaperCard",
+              });
+              setImgError(true);
+            }}
             className="absolute inset-0 w-full h-full object-cover"
           />
           {/* Bottom scrim + title only */}
@@ -40,6 +48,9 @@ export function WallpaperCard({ id, title, mood, style, imageUrl, shimmer, class
             <p className="text-sm font-semibold text-white leading-tight line-clamp-2 drop-shadow">
               {title}
             </p>
+            {subtitle && (
+              <p className="text-[11px] text-white/60 mt-1 line-clamp-1">{subtitle}</p>
+            )}
           </div>
         </>
       ) : (

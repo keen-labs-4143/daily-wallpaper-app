@@ -34,8 +34,25 @@ if (!apiBaseUrl) {
   process.exit(1);
 }
 
-// Strip trailing slashes for consistency
-apiBaseUrl = apiBaseUrl.replace(/\/+$/, "");
+// Require a root HTTP(S) origin. Generated API requests already include /api,
+// so accepting an /api path here would silently create /api/api requests.
+try {
+  const parsed = new URL(apiBaseUrl);
+  if (!["http:", "https:"].includes(parsed.protocol)) {
+    throw new Error("only http and https origins are supported");
+  }
+  if (parsed.pathname !== "/" || parsed.search || parsed.hash) {
+    throw new Error("the URL must not include a path, query, or hash");
+  }
+  apiBaseUrl = parsed.origin;
+} catch (error) {
+  console.error(
+    `\n[cap:build] ERROR: Invalid VITE_API_BASE_URL "${apiBaseUrl}".\n` +
+    "Set it to the backend root origin only (for example https://example.replit.app).\n" +
+    `Reason: ${error instanceof Error ? error.message : String(error)}\n`
+  );
+  process.exit(1);
+}
 console.log(`[cap:build] VITE_API_BASE_URL=${apiBaseUrl}`);
 
 const buildEnv = {

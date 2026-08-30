@@ -17,8 +17,11 @@ export interface Wallpaper {
   /** Visual style e.g. Holographic, Minimal, Neon, Gradient, Cinematic */
   style: string;
   imageUrl: string;
-  /** ISO date string */
-  releaseDate: string;
+  /**
+     * ISO calendar date (YYYY-MM-DD), or null when source data has no valid date
+     * @nullable
+     */
+  releaseDate: string | null;
   /** Where the scene is set or a short description, e.g. Sunrise at Lake Atitlán, Guatemala */
   locationOrDescription?: string | null;
   /** Attribution string shown in notifications, e.g. (© shayes17/Getty Images) */

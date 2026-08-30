@@ -3,8 +3,6 @@ import { useRoute, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { MobileContainer } from "@/components/layout/mobile-container";
 import {
-  useListWallpapers,
-  getListWallpapersQueryKey,
   useListFavorites,
   useAddFavorite,
   useRemoveFavorite,
@@ -19,7 +17,13 @@ import { Share } from "@capacitor/share";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { isSetWallpaperSupported, setWallpaper } from "@/lib/wallpaper-native";
-import { COMMUNITY_WALLPAPERS } from "@/data/community-wallpapers";
+import { LOCAL_COMMUNITY_WALLPAPERS } from "@/lib/community-wallpaper";
+import {
+  DESCRIPTION_UNAVAILABLE_COPY,
+  formatWallpaperDate,
+  SOURCE_UNAVAILABLE_COPY,
+} from "@/lib/wallpaper";
+import { useWallpaperFeed } from "@/hooks/use-wallpaper-feed";
 
 async function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -52,9 +56,7 @@ export default function Preview() {
   const [, setLocation] = useLocation();
   const urlId = match && params?.id ? parseInt(params.id, 10) : 0;
 
-  const { data: allWallpapers = [], isLoading } = useListWallpapers({
-    query: { queryKey: getListWallpapersQueryKey() },
-  });
+  const { data: allWallpapers = [], isLoading } = useWallpaperFeed();
   const { data: favorites = [] } = useListFavorites({
     query: { queryKey: getListFavoritesQueryKey() },
   });
@@ -68,6 +70,7 @@ export default function Preview() {
   const [heartAnimating, setHeartAnimating] = useState(false);
   const [setWallpaperOpen, setSetWallpaperOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
 
   // Community likes — stored in localStorage since these aren't DB records
   // Format: { id: number; ts: number }[] newest first
@@ -92,15 +95,7 @@ export default function Preview() {
 
   // Community wallpapers (IDs 100+) are local-only; API wallpapers come from the DB
   const isCommunity = urlId >= 100;
-  const communityAsWallpapers = COMMUNITY_WALLPAPERS.map((w) => ({
-    id: w.id,
-    title: w.title,
-    mood: w.mood,
-    style: w.style,
-    imageUrl: w.imageUrl,
-    releaseDate: "",
-  }));
-  const displayWallpapers = isCommunity ? communityAsWallpapers : allWallpapers;
+  const displayWallpapers = isCommunity ? LOCAL_COMMUNITY_WALLPAPERS : allWallpapers;
 
   // Sync index from URL once wallpapers are loaded
   useEffect(() => {
@@ -111,8 +106,9 @@ export default function Preview() {
   }, [displayWallpapers.length, urlId, currentIndex]);
 
   const wallpaper = currentIndex >= 0 ? displayWallpapers[currentIndex] : undefined;
-  const canGoPrev = currentIndex > 0;
-  const canGoNext = currentIndex < displayWallpapers.length - 1;
+  useEffect(() => {
+    setImageFailed(false);
+  }, [wallpaper?.id]);
 
   const navigate = (dir: number) => {
     const next = currentIndex + dir;
@@ -161,6 +157,9 @@ export default function Preview() {
     const filename = `wallpaper-${wallpaper.id}.jpg`;
     try {
       const response = await fetch(wallpaper.imageUrl);
+      if (!response.ok) {
+        throw new Error(`Image request returned HTTP ${response.status}`);
+      }
       const blob = await response.blob();
 
       if (Capacitor.isNativePlatform()) {
@@ -184,7 +183,12 @@ export default function Preview() {
           toast({ title: "Downloaded", description: "Wallpaper saved to your device." });
         }, 800);
       }
-    } catch {
+    } catch (error) {
+      console.error("[wallpaper] Download failed", {
+        id: wallpaper.id,
+        url: wallpaper.imageUrl,
+        error,
+      });
       toast({ title: "Download failed", description: "Could not save the wallpaper.", variant: "destructive" });
     } finally {
       setIsSaving(false);
@@ -224,7 +228,11 @@ export default function Preview() {
     }
   };
 
-  if (!match || (!isLoading && allWallpapers.length && currentIndex < 0)) {
+  if (
+    !match ||
+    (!isLoading && displayWallpapers.length === 0) ||
+    (!isLoading && displayWallpapers.length > 0 && displayWallpapers.every((w) => w.id !== urlId))
+  ) {
     return (
       <MobileContainer>
         <div className="flex-1 flex items-center justify-center text-white/50">
@@ -258,10 +266,18 @@ export default function Preview() {
             className="absolute inset-0 z-0"
             style={{ background: gradient }}
           >
-            {wallpaper?.imageUrl && (
+            {wallpaper?.imageUrl && !imageFailed && (
               <img
                 src={wallpaper.imageUrl}
                 alt={wallpaper.title}
+                onError={() => {
+                  console.warn("[wallpaper] Image failed to load", {
+                    id: wallpaper.id,
+                    url: wallpaper.imageUrl,
+                    context: "Preview",
+                  });
+                  setImageFailed(true);
+                }}
                 className="absolute inset-0 w-full h-full object-cover"
                 draggable={false}
               />
@@ -367,6 +383,15 @@ export default function Preview() {
                 <p className="text-white/60 text-xs mt-1 font-medium uppercase tracking-wider">
                   {wallpaper.mood} · {wallpaper.style}
                 </p>
+                 <p className="text-white/55 text-xs mt-2">
+                   {formatWallpaperDate(wallpaper.releaseDate)}
+                 </p>
+                 <p className="text-white/60 text-xs mt-1 line-clamp-2">
+                   {wallpaper.description ?? DESCRIPTION_UNAVAILABLE_COPY}
+                 </p>
+                 <p className="text-white/45 text-xs mt-1 line-clamp-1">
+                   {wallpaper.sourceCredit ?? SOURCE_UNAVAILABLE_COPY}
+                 </p>
               </motion.div>
             )}
           </AnimatePresence>

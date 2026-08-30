@@ -5,16 +5,20 @@ import { MobileContainer } from "@/components/layout/mobile-container";
 import { SideDrawer } from "@/components/layout/side-drawer";
 import { FeedCard } from "@/components/wallpaper/feed-card";
 import {
-  useListWallpapers,
   useListFavorites,
   useAddFavorite,
   useRemoveFavorite,
   getListFavoritesQueryKey,
-  getListWallpapersQueryKey,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
-import { COMMUNITY_WALLPAPERS } from "@/data/community-wallpapers";
+import { LOCAL_COMMUNITY_WALLPAPERS } from "@/lib/community-wallpaper";
+import { useWallpaperFeed } from "@/hooks/use-wallpaper-feed";
+import {
+  compareWallpaperDates,
+  formatWallpaperDate,
+  formatWallpaperMonth,
+} from "@/lib/wallpaper";
 import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -26,29 +30,20 @@ export default function Today() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
 
-  const { data: allWallpapers = [], isLoading } = useListWallpapers({
-    query: { queryKey: getListWallpapersQueryKey() },
-  });
+  const { data: allWallpapers = [], isLoading } = useWallpaperFeed();
   const { data: favorites = [] } = useListFavorites({
     query: { queryKey: getListFavoritesQueryKey() },
   });
   const addFav = useAddFavorite();
   const removeFav = useRemoveFavorite();
 
-  const sorted = [...allWallpapers].sort(
-    (a, b) => (b.releaseDate ?? "").localeCompare(a.releaseDate ?? "")
-  );
+  const sorted = [...allWallpapers].sort(compareWallpaperDates);
 
   const thisWeek = sorted.slice(0, 7);
 
   // Full archive grouped by "Month YYYY"
   const archiveGroups = sorted.reduce<Record<string, typeof sorted>>((acc, w) => {
-    const label = w.releaseDate
-      ? new Date(w.releaseDate + "T00:00:00").toLocaleDateString("en-US", {
-          month: "long",
-          year: "numeric",
-        })
-      : "Unknown";
+    const label = formatWallpaperMonth(w.releaseDate);
     (acc[label] ??= []).push(w);
     return acc;
   }, {});
@@ -140,6 +135,8 @@ export default function Today() {
                   ? Array.from({ length: 3 }).map((_, i) => (
                       <Skeleton key={i} className="w-full aspect-[3/4] rounded-2xl bg-white/5" />
                     ))
+                   : thisWeek.length === 0
+                     ? <FeedEmptyState />
                   : thisWeek.map((w, i) => (
                       <FeedCard
                         key={w.id}
@@ -148,10 +145,7 @@ export default function Today() {
                         mood={w.mood}
                         style={w.style}
                         imageUrl={w.imageUrl}
-                        subtitle={new Date(w.releaseDate).toLocaleDateString("en-US", {
-                          month: "long",
-                          day: "numeric",
-                        })}
+                         subtitle={`${formatWallpaperDate(w.releaseDate)} · ${w.sourceCredit ?? "Source credit unavailable"}`}
                         shimmer={i === 0}
                         isFavorited={favorites.includes(w.id)}
                         onTap={() => setLocation(`/preview/${w.id}`)}
@@ -175,6 +169,8 @@ export default function Today() {
                   ? Array.from({ length: 4 }).map((_, i) => (
                       <Skeleton key={i} className="w-full aspect-[3/4] rounded-2xl bg-white/5" />
                     ))
+                   : Object.keys(archiveGroups).length === 0
+                     ? <FeedEmptyState />
                   : Object.entries(archiveGroups).map(([month, group]) => (
                       <div key={month}>
                         <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-3 px-1">
@@ -189,7 +185,7 @@ export default function Today() {
                               mood={w.mood}
                               style={w.style}
                               imageUrl={w.imageUrl}
-                              subtitle={`${w.mood} · ${w.style}`}
+                               subtitle={`${formatWallpaperDate(w.releaseDate)} · ${w.sourceCredit ?? "Source credit unavailable"}`}
                               isFavorited={favorites.includes(w.id)}
                               onTap={() => setLocation(`/preview/${w.id}`)}
                               onFavorite={() => toggleFavorite(w.id)}
@@ -211,7 +207,7 @@ export default function Today() {
                 transition={{ duration: 0.2 }}
                 className="px-4 pt-4 space-y-4"
               >
-                {COMMUNITY_WALLPAPERS.map((w, i) => (
+                {LOCAL_COMMUNITY_WALLPAPERS.map((w, i) => (
                   <FeedCard
                     key={w.id}
                     id={w.id}
@@ -219,7 +215,7 @@ export default function Today() {
                     mood={w.mood}
                     style={w.style}
                     imageUrl={w.imageUrl}
-                    subtitle={`by ${w.author}`}
+                     subtitle={`${w.sourceCredit ?? "Community"} · ${w.description ?? "Description unavailable"}`}
                     isFavorited={favorites.includes(w.id)}
                     onTap={() => setLocation(`/preview/${w.id}`)}
                     onFavorite={() => toggleFavorite(w.id)}
@@ -233,5 +229,14 @@ export default function Today() {
       </div>
 
     </MobileContainer>
+  );
+}
+
+function FeedEmptyState() {
+  return (
+    <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-5 py-8 text-center">
+      <p className="text-white/70 font-medium">Wallpapers are unavailable</p>
+      <p className="text-white/40 text-sm mt-1">Check your connection and try again.</p>
+    </div>
   );
 }

@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { useSettings, UpdateFrequency } from "@/hooks/use-settings";
 import { Capacitor } from "@capacitor/core";
 import { requestAndScheduleNotification, cancelNotification } from "@/lib/notifications";
-import { useListWallpapers, getListWallpapersQueryKey } from "@workspace/api-client-react";
+import { useWallpaperFeed } from "@/hooks/use-wallpaper-feed";
 
 function Card({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -81,9 +81,7 @@ export default function Settings() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { settings, set } = useSettings();
-  const { data: allWallpapers = [] } = useListWallpapers({
-    query: { queryKey: getListWallpapersQueryKey() },
-  });
+  const { data: allWallpapers = [] } = useWallpaperFeed();
 
   const handleNotificationsChange = (checked: boolean) => {
     void (async () => {

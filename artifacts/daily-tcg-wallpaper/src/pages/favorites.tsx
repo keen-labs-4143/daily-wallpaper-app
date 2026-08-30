@@ -3,14 +3,16 @@ import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { MobileContainer } from "@/components/layout/mobile-container";
 import { WallpaperCard } from "@/components/wallpaper/wallpaper-card";
-import { useListWallpapers, useListFavorites, getListWallpapersQueryKey, getListFavoritesQueryKey } from "@workspace/api-client-react";
+import { useListFavorites, getListFavoritesQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BookmarkMinus, ChevronLeft } from "lucide-react";
-import { COMMUNITY_WALLPAPERS } from "@/data/community-wallpapers";
+import { LOCAL_COMMUNITY_WALLPAPERS } from "@/lib/community-wallpaper";
+import { formatWallpaperDate } from "@/lib/wallpaper";
+import { useWallpaperFeed } from "@/hooks/use-wallpaper-feed";
 
 export default function Favorites() {
   const [, setLocation] = useLocation();
-  const { data: allWallpapers = [], isLoading: isLoadingWalls } = useListWallpapers({ query: { queryKey: getListWallpapersQueryKey() }});
+  const { data: allWallpapers = [], isLoading: isLoadingWalls } = useWallpaperFeed();
   const { data: favorites = [], isLoading: isLoadingFavs } = useListFavorites({ query: { queryKey: getListFavoritesQueryKey() }});
 
   const [communityLikes] = useState<{ id: number; ts: number }[]>(() => {
@@ -39,9 +41,19 @@ export default function Favorites() {
 
   // Build unified card list with timestamps, then sort newest first
   const wallpaperMap = new Map(allWallpapers.map(w => [w.id, w]));
-  const communityMap = new Map(COMMUNITY_WALLPAPERS.map(w => [w.id, w]));
+  const communityMap = new Map(LOCAL_COMMUNITY_WALLPAPERS.map(w => [w.id, w]));
 
-  type FavCard = { id: number; title: string; mood: string; style: string; imageUrl?: string; releaseDate: string; ts: number };
+  type FavCard = {
+    id: number;
+    title: string;
+    mood: string;
+    style: string;
+    imageUrl: string | null;
+    releaseDate: string | null;
+    description: string | null;
+    sourceCredit: string | null;
+    ts: number;
+  };
 
   const dbCards: FavCard[] = favorites.flatMap((id, index) => {
     const w = wallpaperMap.get(id);
@@ -53,7 +65,7 @@ export default function Favorites() {
 
   const communityCards: FavCard[] = communityLikes.flatMap(({ id, ts }) => {
     const w = communityMap.get(id);
-    return w ? [{ id: w.id, title: w.title, mood: w.mood, style: w.style, imageUrl: w.imageUrl, releaseDate: "", ts }] : [];
+    return w ? [{ ...w, ts }] : [];
   });
 
   const favoriteCards = [...dbCards, ...communityCards].sort((a, b) => b.ts - a.ts);
@@ -103,6 +115,7 @@ export default function Favorites() {
                   mood={card.mood}
                   style={card.style}
                   imageUrl={card.imageUrl}
+                   subtitle={`${formatWallpaperDate(card.releaseDate)} · ${card.sourceCredit ?? "Source credit unavailable"}`}
                   className="rounded-2xl shadow-lg border-white/5 hover:border-primary/50 transition-colors"
                 />
               </motion.div>

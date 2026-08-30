@@ -10,7 +10,7 @@ interface FeedCardProps {
   title: string;
   mood: string;
   style: string;
-  imageUrl?: string;
+  imageUrl?: string | null;
   subtitle?: string;
   shimmer?: boolean;
   isFavorited?: boolean;
@@ -62,7 +62,14 @@ export function FeedCard({
           <img
             src={imageUrl}
             alt={title}
-            onError={() => setImgError(true)}
+            onError={() => {
+              console.warn("[wallpaper] Image failed to load", {
+                id,
+                url: imageUrl,
+                context: "FeedCard",
+              });
+              setImgError(true);
+            }}
             className="absolute inset-0 w-full h-full object-cover"
           />
         )}
