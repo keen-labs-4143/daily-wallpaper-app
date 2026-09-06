@@ -1,0 +1,57 @@
+We are entering Phase 3: Wallpaper content feed, but there is an important Android-specific issue.
+
+Before coding, please inspect and make a plan only.
+
+Current test result:
+- Wallpapers show correctly in the Replit web app.
+- After committing, pulling/building/syncing, and testing on Android, the main screen says wallpaper not available or does not show the expected wallpapers.
+- However, wallpapers from the Community page do appear on Android.
+- This suggests Community may be using a different data/image source than Today/Home, or the main wallpaper feed uses image paths that work in Replit but are not bundled correctly into Capacitor Android.
+
+Please inspect:
+1. Where Today/Home gets wallpaper records.
+2. Where Community gets wallpaper records.
+3. Whether Today/Home and Community use separate arrays, mock data, fallback data, or different field names.
+4. Whether main wallpaper image paths point to Replit-only assets, attached_assets, src assets, or paths not copied into the Android build.
+5. Whether the built Android assets include the main wallpaper images after `vite build` and `cap sync`.
+6. Whether `dist/public` and `android/app/src/main/assets/public` contain the wallpaper images/data needed by Today/Home.
+7. Whether Today/Home is filtering out valid wallpapers because of dateAvailable, isPublished, invalid date parsing, or timezone logic.
+8. Whether Android and web are using the same normalized feed.
+
+Phase 3 goal:
+Create one Android-safe wallpaper feed that powers Today/Home, Preview, This Week, Favorites, and Notifications.
+
+Requirements:
+- Use one structured local wallpaper feed for MVP.
+- Store images in a location that Vite/Capacitor reliably bundles for Android, preferably `public/wallpapers/`.
+- Reference images with stable public paths like `/wallpapers/example.webp`.
+- Start with 14–30 scheduled wallpapers.
+- Each wallpaper should include:
+  - id
+  - title
+  - description
+  - image path or image URL
+  - dateAvailable in YYYY-MM-DD format
+  - artist/source/credit
+  - collection
+  - mood/style
+  - isPublished boolean
+- AI-generated titles and credits are okay for MVP, but they must come from the feed and stay consistent.
+- Today’s Wallpaper should be the newest published wallpaper where dateAvailable <= the user’s local date.
+- Never show Invalid Date.
+- Do not show “wallpaper not available” if at least one valid published wallpaper exists.
+- Community should not be the only place wallpapers appear. Either hide Community for now, label it as coming soon, or temporarily have it reuse the same feed.
+
+Do not redesign the UI.
+Do not implement background auto-wallpaper updates yet.
+Do not fix manual Set Wallpaper yet unless the shared feed cleanup requires it.
+
+In the plan, tell me:
+- why Replit web can see wallpapers but Android cannot
+- which files are responsible
+- where wallpaper images should live
+- how the app will confirm Android has access to the images
+- how Today/Home will choose the current wallpaper
+- how I should test this on Android after implementation
+
+Do not code until I approve the plan.
