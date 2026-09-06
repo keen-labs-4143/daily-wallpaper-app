@@ -1,24 +1,15 @@
 import { Capacitor } from "@capacitor/core";
 import { LocalNotifications } from "@capacitor/local-notifications";
-import type { WallpaperRecord } from "@/lib/wallpaper";
+import {
+  selectWallpaperForDate,
+  type WallpaperRecord,
+} from "@/lib/wallpaper";
 
 const NOTIF_BASE_ID = 1001;
 const DAYS_AHEAD = 14;
 
-/**
- * Picks the wallpaper for a given date using the same deterministic
- * day-of-year formula the API uses for `/wallpapers/today`, so scheduled
- * notification content matches what the app will actually show that day.
- */
-function pickWallpaperForDate<T>(wallpapers: T[], date: Date): T {
-  const dayOfYear = Math.floor(
-    (date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000
-  );
-  return wallpapers[dayOfYear % wallpapers.length];
-}
-
 function formatBody(wallpaper: WallpaperRecord): string {
-  const lines = [wallpaper.description, wallpaper.sourceCredit].filter(
+  const lines = [wallpaper.description, wallpaper.credit].filter(
     (line): line is string => Boolean(line && line.trim())
   );
   return lines.length ? lines.join("\n") : "Today's wallpaper is here.";
@@ -47,9 +38,7 @@ export async function requestAndScheduleNotification(
   await LocalNotifications.cancel({ notifications: allNotificationIds() }).catch(() => {});
 
   if (!wallpapers.length) {
-    console.warn("[wallpaper] Notification schedule skipped because the feed is empty", {
-      request: "GET /api/wallpapers",
-    });
+    console.warn("[wallpaper] Notification schedule skipped because the local feed is empty");
     return { granted: true };
   }
 
@@ -60,7 +49,8 @@ export async function requestAndScheduleNotification(
     trigger.setHours(9, 0, 0, 0);
     if (trigger <= new Date()) continue;
 
-    const wallpaper = pickWallpaperForDate(wallpapers, trigger);
+    const wallpaper = selectWallpaperForDate(wallpapers, trigger);
+    if (!wallpaper) continue;
     notifications.push({
       id: NOTIF_BASE_ID + i,
       title: wallpaper.title,

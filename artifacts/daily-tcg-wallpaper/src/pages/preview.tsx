@@ -2,27 +2,16 @@ import React, { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { MobileContainer } from "@/components/layout/mobile-container";
-import {
-  useListFavorites,
-  useAddFavorite,
-  useRemoveFavorite,
-  getListFavoritesQueryKey,
-} from "@workspace/api-client-react";
 import { generateGradient } from "@/lib/generateGradient";
 import { ChevronLeft, Share2, Heart, Smartphone, Download, X, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Share } from "@capacitor/share";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { isSetWallpaperSupported, setWallpaper } from "@/lib/wallpaper-native";
-import { LOCAL_COMMUNITY_WALLPAPERS } from "@/lib/community-wallpaper";
-import {
-  DESCRIPTION_UNAVAILABLE_COPY,
-  formatWallpaperDate,
-  SOURCE_UNAVAILABLE_COPY,
-} from "@/lib/wallpaper";
+import { formatWallpaperDate } from "@/lib/wallpaper";
+import { useFavorites } from "@/hooks/use-favorites";
 import { useWallpaperFeed } from "@/hooks/use-wallpaper-feed";
 
 async function blobToBase64(blob: Blob): Promise<string> {
@@ -57,12 +46,7 @@ export default function Preview() {
   const urlId = match && params?.id ? parseInt(params.id, 10) : 0;
 
   const { data: allWallpapers = [], isLoading } = useWallpaperFeed();
-  const { data: favorites = [] } = useListFavorites({
-    query: { queryKey: getListFavoritesQueryKey() },
-  });
-  const addFav = useAddFavorite();
-  const removeFav = useRemoveFavorite();
-  const queryClient = useQueryClient();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const { toast } = useToast();
 
   const [currentIndex, setCurrentIndex] = useState(-1);
@@ -72,30 +56,7 @@ export default function Preview() {
   const [isSaving, setIsSaving] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
 
-  // Community likes — stored in localStorage since these aren't DB records
-  // Format: { id: number; ts: number }[] newest first
-  const [communityLikes, setCommunityLikes] = useState<{ id: number; ts: number }[]>(() => {
-    try {
-      const stored = localStorage.getItem("dtcg:community-likes");
-      if (!stored) return [];
-      const parsed = JSON.parse(stored) as unknown;
-      // Migrate old number[] format
-      if (Array.isArray(parsed) && typeof parsed[0] === "number") {
-        return (parsed as number[]).map((id) => ({ id, ts: 0 }));
-      }
-      return parsed as { id: number; ts: number }[];
-    } catch {
-      return [];
-    }
-  });
-  const saveCommunityLikes = (next: { id: number; ts: number }[]) => {
-    setCommunityLikes(next);
-    localStorage.setItem("dtcg:community-likes", JSON.stringify(next));
-  };
-
-  // Community wallpapers (IDs 100+) are local-only; API wallpapers come from the DB
-  const isCommunity = urlId >= 100;
-  const displayWallpapers = isCommunity ? LOCAL_COMMUNITY_WALLPAPERS : allWallpapers;
+  const displayWallpapers = allWallpapers;
 
   // Sync index from URL once wallpapers are loaded
   useEffect(() => {
@@ -118,43 +79,19 @@ export default function Preview() {
     setLocation(`/preview/${displayWallpapers[next].id}`, { replace: true } as never);
   };
 
-  const isFavorited = wallpaper
-    ? isCommunity
-      ? communityLikes.some((l) => l.id === wallpaper.id)
-      : favorites.includes(wallpaper.id)
-    : false;
+  const isFavorited = wallpaper ? isFavorite(wallpaper.id) : false;
 
-  const toggleFavorite = () => {
+  const handleToggleFavorite = () => {
     if (!wallpaper) return;
     setHeartAnimating(true);
     setTimeout(() => setHeartAnimating(false), 400);
-    if (isCommunity) {
-      saveCommunityLikes(
-        isFavorited
-          ? communityLikes.filter((l) => l.id !== wallpaper.id)
-          : [{ id: wallpaper.id, ts: Date.now() }, ...communityLikes]
-      );
-    } else {
-      queryClient.setQueryData(getListFavoritesQueryKey(), (old: number[] = []) =>
-        isFavorited ? old.filter((fid) => fid !== wallpaper.id) : [wallpaper.id, ...old]
-      );
-      try {
-        const ts = JSON.parse(localStorage.getItem("dtcg:fav-timestamps") || "{}") as Record<number, number>;
-        if (isFavorited) { delete ts[wallpaper.id]; } else { ts[wallpaper.id] = Date.now(); }
-        localStorage.setItem("dtcg:fav-timestamps", JSON.stringify(ts));
-      } catch { /* ignore */ }
-      if (isFavorited) {
-        removeFav.mutate({ wallpaperId: wallpaper.id });
-      } else {
-        addFav.mutate({ wallpaperId: wallpaper.id });
-      }
-    }
+    toggleFavorite(wallpaper.id);
   };
 
   const handleSave = async () => {
     if (!wallpaper?.imageUrl || isSaving) return;
     setIsSaving(true);
-    const filename = `wallpaper-${wallpaper.id}.jpg`;
+    const filename = `wallpaper-${wallpaper.id}.webp`;
     try {
       const response = await fetch(wallpaper.imageUrl);
       if (!response.ok) {
@@ -351,7 +288,7 @@ export default function Preview() {
           <FabButton onClick={handleShare} aria-label="Share">
             <Share2 size={18} />
           </FabButton>
-          <FabButton onClick={toggleFavorite} aria-label="Favourite">
+          <FabButton onClick={handleToggleFavorite} aria-label="Favourite">
             <Heart
               size={18}
               className={cn(
@@ -384,13 +321,13 @@ export default function Preview() {
                   {wallpaper.mood} · {wallpaper.style}
                 </p>
                  <p className="text-white/55 text-xs mt-2">
-                   {formatWallpaperDate(wallpaper.releaseDate)}
+                   {formatWallpaperDate(wallpaper.dateAvailable)}
                  </p>
                  <p className="text-white/60 text-xs mt-1 line-clamp-2">
-                   {wallpaper.description ?? DESCRIPTION_UNAVAILABLE_COPY}
+                    {wallpaper.description}
                  </p>
                  <p className="text-white/45 text-xs mt-1 line-clamp-1">
-                   {wallpaper.sourceCredit ?? SOURCE_UNAVAILABLE_COPY}
+                    {wallpaper.credit}
                  </p>
               </motion.div>
             )}

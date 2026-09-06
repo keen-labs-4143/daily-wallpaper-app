@@ -4,15 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MobileContainer } from "@/components/layout/mobile-container";
 import { SideDrawer } from "@/components/layout/side-drawer";
 import { FeedCard } from "@/components/wallpaper/feed-card";
-import {
-  useListFavorites,
-  useAddFavorite,
-  useRemoveFavorite,
-  getListFavoritesQueryKey,
-} from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useQueryClient } from "@tanstack/react-query";
-import { LOCAL_COMMUNITY_WALLPAPERS } from "@/lib/community-wallpaper";
+import { useFavorites } from "@/hooks/use-favorites";
 import { useWallpaperFeed } from "@/hooks/use-wallpaper-feed";
 import {
   compareWallpaperDates,
@@ -22,20 +15,15 @@ import {
 import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Tab = "week" | "collection" | "community";
+type Tab = "week" | "collection";
 
 export default function Today() {
   const [activeTab, setActiveTab] = useState<Tab>("week");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [, setLocation] = useLocation();
-  const queryClient = useQueryClient();
 
   const { data: allWallpapers = [], isLoading } = useWallpaperFeed();
-  const { data: favorites = [] } = useListFavorites({
-    query: { queryKey: getListFavoritesQueryKey() },
-  });
-  const addFav = useAddFavorite();
-  const removeFav = useRemoveFavorite();
+  const { favoriteIds, toggleFavorite } = useFavorites();
 
   const sorted = [...allWallpapers].sort(compareWallpaperDates);
 
@@ -43,32 +31,14 @@ export default function Today() {
 
   // Full archive grouped by "Month YYYY"
   const archiveGroups = sorted.reduce<Record<string, typeof sorted>>((acc, w) => {
-    const label = formatWallpaperMonth(w.releaseDate);
+    const label = formatWallpaperMonth(w.dateAvailable);
     (acc[label] ??= []).push(w);
     return acc;
   }, {});
 
-  const toggleFavorite = (id: number) => {
-    const isFav = favorites.includes(id);
-    queryClient.setQueryData(getListFavoritesQueryKey(), (old: number[] = []) =>
-      isFav ? old.filter((f) => f !== id) : [id, ...old]
-    );
-    try {
-      const ts = JSON.parse(localStorage.getItem("dtcg:fav-timestamps") || "{}") as Record<number, number>;
-      if (isFav) { delete ts[id]; } else { ts[id] = Date.now(); }
-      localStorage.setItem("dtcg:fav-timestamps", JSON.stringify(ts));
-    } catch { /* ignore */ }
-    if (isFav) {
-      removeFav.mutate({ wallpaperId: id });
-    } else {
-      addFav.mutate({ wallpaperId: id });
-    }
-  };
-
   const tabs: { key: Tab; label: string }[] = [
     { key: "week", label: "This week" },
     { key: "collection", label: "Our collection" },
-    { key: "community", label: "Community" },
   ];
 
   return (
@@ -145,9 +115,9 @@ export default function Today() {
                         mood={w.mood}
                         style={w.style}
                         imageUrl={w.imageUrl}
-                         subtitle={`${formatWallpaperDate(w.releaseDate)} · ${w.sourceCredit ?? "Source credit unavailable"}`}
+                         subtitle={`${formatWallpaperDate(w.dateAvailable)} · ${w.credit}`}
                         shimmer={i === 0}
-                        isFavorited={favorites.includes(w.id)}
+                         isFavorited={favoriteIds.includes(w.id)}
                         onTap={() => setLocation(`/preview/${w.id}`)}
                         onFavorite={() => toggleFavorite(w.id)}
                         index={i}
@@ -185,8 +155,8 @@ export default function Today() {
                               mood={w.mood}
                               style={w.style}
                               imageUrl={w.imageUrl}
-                               subtitle={`${formatWallpaperDate(w.releaseDate)} · ${w.sourceCredit ?? "Source credit unavailable"}`}
-                              isFavorited={favorites.includes(w.id)}
+                               subtitle={`${formatWallpaperDate(w.dateAvailable)} · ${w.credit}`}
+                              isFavorited={favoriteIds.includes(w.id)}
                               onTap={() => setLocation(`/preview/${w.id}`)}
                               onFavorite={() => toggleFavorite(w.id)}
                               index={i}
@@ -198,32 +168,6 @@ export default function Today() {
               </motion.div>
             )}
 
-            {activeTab === "community" && (
-              <motion.div
-                key="community"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="px-4 pt-4 space-y-4"
-              >
-                {LOCAL_COMMUNITY_WALLPAPERS.map((w, i) => (
-                  <FeedCard
-                    key={w.id}
-                    id={w.id}
-                    title={w.title}
-                    mood={w.mood}
-                    style={w.style}
-                    imageUrl={w.imageUrl}
-                     subtitle={`${w.sourceCredit ?? "Community"} · ${w.description ?? "Description unavailable"}`}
-                    isFavorited={favorites.includes(w.id)}
-                    onTap={() => setLocation(`/preview/${w.id}`)}
-                    onFavorite={() => toggleFavorite(w.id)}
-                    index={i}
-                  />
-                ))}
-              </motion.div>
-            )}
           </AnimatePresence>
         </div>
       </div>
@@ -236,7 +180,7 @@ function FeedEmptyState() {
   return (
     <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-5 py-8 text-center">
       <p className="text-white/70 font-medium">Wallpapers are unavailable</p>
-      <p className="text-white/40 text-sm mt-1">Check your connection and try again.</p>
+      <p className="text-white/40 text-sm mt-1">No published wallpapers are available yet.</p>
     </div>
   );
 }

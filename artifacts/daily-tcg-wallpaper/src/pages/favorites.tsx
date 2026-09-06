@@ -1,74 +1,27 @@
-import React, { useState } from "react";
+import React from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { MobileContainer } from "@/components/layout/mobile-container";
 import { WallpaperCard } from "@/components/wallpaper/wallpaper-card";
-import { useListFavorites, getListFavoritesQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BookmarkMinus, ChevronLeft } from "lucide-react";
-import { LOCAL_COMMUNITY_WALLPAPERS } from "@/lib/community-wallpaper";
 import { formatWallpaperDate } from "@/lib/wallpaper";
+import { useFavorites } from "@/hooks/use-favorites";
 import { useWallpaperFeed } from "@/hooks/use-wallpaper-feed";
 
 export default function Favorites() {
   const [, setLocation] = useLocation();
-  const { data: allWallpapers = [], isLoading: isLoadingWalls } = useWallpaperFeed();
-  const { data: favorites = [], isLoading: isLoadingFavs } = useListFavorites({ query: { queryKey: getListFavoritesQueryKey() }});
-
-  const [communityLikes] = useState<{ id: number; ts: number }[]>(() => {
-    try {
-      const stored = localStorage.getItem("dtcg:community-likes");
-      if (!stored) return [];
-      const parsed = JSON.parse(stored) as unknown;
-      if (Array.isArray(parsed) && typeof parsed[0] === "number") {
-        return (parsed as number[]).map((id) => ({ id, ts: 0 }));
-      }
-      return parsed as { id: number; ts: number }[];
-    } catch {
-      return [];
-    }
-  });
-
-  const [favTimestamps] = useState<Record<number, number>>(() => {
-    try {
-      return JSON.parse(localStorage.getItem("dtcg:fav-timestamps") || "{}") as Record<number, number>;
-    } catch {
-      return {};
-    }
-  });
-
-  const isLoading = isLoadingWalls || isLoadingFavs;
+  const { data: allWallpapers = [], isLoading } = useWallpaperFeed();
+  const { favorites } = useFavorites();
 
   // Build unified card list with timestamps, then sort newest first
   const wallpaperMap = new Map(allWallpapers.map(w => [w.id, w]));
-  const communityMap = new Map(LOCAL_COMMUNITY_WALLPAPERS.map(w => [w.id, w]));
-
-  type FavCard = {
-    id: number;
-    title: string;
-    mood: string;
-    style: string;
-    imageUrl: string | null;
-    releaseDate: string | null;
-    description: string | null;
-    sourceCredit: string | null;
-    ts: number;
-  };
-
-  const dbCards: FavCard[] = favorites.flatMap((id, index) => {
-    const w = wallpaperMap.get(id);
-    if (!w) return [];
-    // Use tracked timestamp if available, otherwise fall back to API order position
-    const ts = favTimestamps[id] ?? (Date.now() - index * 1000 * 60 * 60 * 24);
-    return [{ ...w, ts }];
-  });
-
-  const communityCards: FavCard[] = communityLikes.flatMap(({ id, ts }) => {
-    const w = communityMap.get(id);
-    return w ? [{ ...w, ts }] : [];
-  });
-
-  const favoriteCards = [...dbCards, ...communityCards].sort((a, b) => b.ts - a.ts);
+  const favoriteCards = favorites
+    .flatMap(({ id, savedAt }) => {
+      const wallpaper = wallpaperMap.get(id);
+      return wallpaper ? [{ ...wallpaper, savedAt }] : [];
+    })
+    .sort((a, b) => b.savedAt - a.savedAt);
 
   return (
     <MobileContainer>
@@ -115,7 +68,7 @@ export default function Favorites() {
                   mood={card.mood}
                   style={card.style}
                   imageUrl={card.imageUrl}
-                   subtitle={`${formatWallpaperDate(card.releaseDate)} · ${card.sourceCredit ?? "Source credit unavailable"}`}
+                   subtitle={`${formatWallpaperDate(card.dateAvailable)} · ${card.credit}`}
                   className="rounded-2xl shadow-lg border-white/5 hover:border-primary/50 transition-colors"
                 />
               </motion.div>
