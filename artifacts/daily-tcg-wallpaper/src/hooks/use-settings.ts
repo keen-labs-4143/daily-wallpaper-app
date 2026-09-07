@@ -21,7 +21,7 @@ const DEFAULTS: AppSettings = {
   updateFrequency: "daily",
   updateTime: "08:00",
   autoDownload: false,
-  notifications: true,
+  notifications: false,
 };
 
 function load(): AppSettings {

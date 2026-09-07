@@ -5,74 +5,109 @@ import {
   type WallpaperRecord,
 } from "@/lib/wallpaper";
 
-const NOTIF_BASE_ID = 1001;
-const DAYS_AHEAD = 14;
+const TEST_NOTIFICATION_ID = 9001;
+const LEGACY_DAILY_BASE_ID = 1001;
+const LEGACY_DAILY_COUNT = 14;
+const GENERIC_TITLE = "Today's wallpaper is ready";
+const GENERIC_BODY = "Open Daily TCG Wallpaper to see today's selection.";
+
+export interface NotificationContent {
+  title: string;
+  body: string;
+  wallpaperId: number | null;
+}
 
 function formatBody(wallpaper: WallpaperRecord): string {
-  const lines = [wallpaper.description, wallpaper.credit].filter(
-    (line): line is string => Boolean(line && line.trim())
-  );
-  return lines.length ? lines.join("\n") : "Today's wallpaper is here.";
+  return [wallpaper.description, wallpaper.credit]
+    .filter((line) => line.trim())
+    .join("\n");
 }
 
-function allNotificationIds(): { id: number }[] {
-  return Array.from({ length: DAYS_AHEAD }, (_, i) => ({ id: NOTIF_BASE_ID + i }));
+export function getCurrentNotificationContent(
+  wallpapers: WallpaperRecord[],
+  date = new Date(),
+): NotificationContent {
+  const wallpaper = selectWallpaperForDate(wallpapers, date);
+  if (!wallpaper) {
+    return {
+      title: GENERIC_TITLE,
+      body: GENERIC_BODY,
+      wallpaperId: null,
+    };
+  }
+
+  return {
+    title: wallpaper.title,
+    body: formatBody(wallpaper),
+    wallpaperId: wallpaper.id,
+  };
 }
 
-/**
- * Request permission and schedule daily 9 AM notifications for the next
- * `DAYS_AHEAD` days, each with that day's actual wallpaper title/description/
- * credit. Tapping a notification opens Today's Wallpaper.
- * Returns { granted: false } silently on web — the preference is still
- * persisted so it takes effect when the user opens the Android build.
- */
-export async function requestAndScheduleNotification(
-  wallpapers: WallpaperRecord[]
-): Promise<{ granted: boolean }> {
-  if (!Capacitor.isNativePlatform()) return { granted: false };
+export async function requestNotificationPermission(): Promise<{
+  granted: boolean;
+  native: boolean;
+}> {
+  if (!Capacitor.isNativePlatform()) {
+    return { granted: false, native: false };
+  }
 
   const { display } = await LocalNotifications.requestPermissions();
-  if (display !== "granted") return { granted: false };
-
-  // Clear any existing schedule before re-scheduling
-  await LocalNotifications.cancel({ notifications: allNotificationIds() }).catch(() => {});
-
-  if (!wallpapers.length) {
-    console.warn("[wallpaper] Notification schedule skipped because the local feed is empty");
-    return { granted: true };
-  }
-
-  const notifications = [];
-  for (let i = 0; i < DAYS_AHEAD; i++) {
-    const trigger = new Date();
-    trigger.setDate(trigger.getDate() + i);
-    trigger.setHours(9, 0, 0, 0);
-    if (trigger <= new Date()) continue;
-
-    const wallpaper = selectWallpaperForDate(wallpapers, trigger);
-    if (!wallpaper) continue;
-    notifications.push({
-      id: NOTIF_BASE_ID + i,
-      title: wallpaper.title,
-      body: formatBody(wallpaper),
-      schedule: { at: trigger },
-      actionTypeId: "",
-      extra: { route: "/today" },
-    });
-  }
-
-  if (notifications.length) {
-    await LocalNotifications.schedule({ notifications });
-  }
-
-  return { granted: true };
+  return { granted: display === "granted", native: true };
 }
 
-/**
- * Cancel all scheduled daily notifications.
- * No-op on web.
- */
-export async function cancelNotification(): Promise<void> {
+export async function hasNotificationPermission(): Promise<boolean> {
+  if (!Capacitor.isNativePlatform()) return false;
+  const { display } = await LocalNotifications.checkPermissions();
+  return display === "granted";
+}
+
+export async function scheduleTestNotification(
+  wallpapers: WallpaperRecord[],
+  delaySeconds = 10,
+): Promise<{ scheduled: boolean; content: NotificationContent }> {
+  const content = getCurrentNotificationContent(wallpapers);
+  if (!Capacitor.isNativePlatform()) {
+    return { scheduled: false, content };
+  }
+
+  if (!(await hasNotificationPermission())) {
+    return { scheduled: false, content };
+  }
+
+  await LocalNotifications.cancel({
+    notifications: [{ id: TEST_NOTIFICATION_ID }],
+  }).catch(() => {});
+
+  const at = new Date(Date.now() + delaySeconds * 1000);
+  await LocalNotifications.schedule({
+    notifications: [
+      {
+        id: TEST_NOTIFICATION_ID,
+        title: content.title,
+        body: content.body,
+        schedule: { at, allowWhileIdle: true },
+        actionTypeId: "",
+        extra: {
+          route: "/today",
+          wallpaperId: content.wallpaperId,
+          isTestNotification: true,
+        },
+      },
+    ],
+  });
+
+  return { scheduled: true, content };
+}
+
+export async function cancelNotifications(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
-  await LocalNotifications.cancel({ notifications: allNotificationIds() }).catch(() => {});
+
+  const legacyDailyIds = Array.from(
+    { length: LEGACY_DAILY_COUNT },
+    (_, index) => ({ id: LEGACY_DAILY_BASE_ID + index }),
+  );
+  await LocalNotifications.cancel({
+    notifications: [{ id: TEST_NOTIFICATION_ID }, ...legacyDailyIds],
+  }).catch(() => {});
+  await LocalNotifications.removeAllDeliveredNotifications().catch(() => {});
 }

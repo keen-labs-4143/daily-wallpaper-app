@@ -1,14 +1,19 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { MobileContainer } from "@/components/layout/mobile-container";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronLeft } from "lucide-react";
+import { BellRing, ChevronLeft, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useSettings, UpdateFrequency } from "@/hooks/use-settings";
 import { Capacitor } from "@capacitor/core";
-import { requestAndScheduleNotification, cancelNotification } from "@/lib/notifications";
+import {
+  cancelNotifications,
+  hasNotificationPermission,
+  requestNotificationPermission,
+  scheduleTestNotification,
+} from "@/lib/notifications";
 import { useWallpaperFeed } from "@/hooks/use-wallpaper-feed";
 
 function Card({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -82,22 +87,112 @@ export default function Settings() {
   const { toast } = useToast();
   const { settings, set } = useSettings();
   const { data: allWallpapers = [] } = useWallpaperFeed();
+  const [notificationBusy, setNotificationBusy] = useState(false);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() || !settings.notifications) return;
+    void hasNotificationPermission()
+      .then(async (granted) => {
+        if (granted) return;
+        await cancelNotifications();
+        set("notifications", false);
+      })
+      .catch((error) => {
+        console.error("[notifications] Could not reconcile notification permission", {
+          error,
+        });
+        set("notifications", false);
+      });
+  }, []);
 
   const handleNotificationsChange = (checked: boolean) => {
     void (async () => {
-      if (checked) {
-        const { granted } = await requestAndScheduleNotification(allWallpapers);
-        if (Capacitor.isNativePlatform() && !granted) {
+      setNotificationBusy(true);
+      try {
+        if (checked) {
+          const { granted, native } = await requestNotificationPermission();
+          if (!native) {
+            toast({
+              title: "Android notification setting",
+              description: "Notification permission is requested in the Android app.",
+            });
+            return;
+          }
+          if (!granted) {
+            await cancelNotifications();
+            set("notifications", false);
+            toast({
+              title: "Notifications remain off",
+              description: "Permission was denied. You can enable it in Android settings.",
+            });
+            return;
+          }
+          set("notifications", true);
           toast({
-            title: "Permission denied",
-            description: "Enable notifications in device settings.",
+            title: "Notifications enabled",
+            description: "Permission granted. Use the dev test below to check the content.",
+          });
+        } else {
+          await cancelNotifications();
+          set("notifications", false);
+          toast({
+            title: "Notifications off",
+            description: "Pending test notifications were canceled.",
+          });
+        }
+      } catch (error) {
+        console.error("[notifications] Could not update notification setting", { error });
+        await cancelNotifications().catch(() => {});
+        set("notifications", false);
+        toast({
+          title: "Notification setting failed",
+          description: "Nothing was scheduled. Please try again.",
+        });
+      } finally {
+        setNotificationBusy(false);
+      }
+    })();
+  };
+
+  const handleTestNotification = () => {
+    void (async () => {
+      setNotificationBusy(true);
+      try {
+        if (!settings.notifications) {
+          toast({
+            title: "Turn Notifications on first",
+            description: "The test respects the Notifications setting.",
           });
           return;
         }
-        set("notifications", true);
-      } else {
-        await cancelNotification();
-        set("notifications", false);
+
+        const { scheduled, content } = await scheduleTestNotification(
+          allWallpapers,
+          10,
+        );
+        if (!scheduled) {
+          set("notifications", false);
+          toast({
+            title: "Test notification not scheduled",
+            description: Capacitor.isNativePlatform()
+              ? "Notification permission is not granted."
+              : "This dev test runs in the Android app.",
+          });
+          return;
+        }
+
+        toast({
+          title: "Test notification scheduled",
+          description: `In 10 seconds: “${content.title}”`,
+        });
+      } catch (error) {
+        console.error("[notifications] Test notification failed", { error });
+        toast({
+          title: "Test notification failed",
+          description: "Nothing was scheduled. Please try again.",
+        });
+      } finally {
+        setNotificationBusy(false);
       }
     })();
   };
@@ -247,21 +342,39 @@ export default function Settings() {
           </Card>
 
           {/* Card 3 — Notifications */}
-          {/* Fully wired: requests permission and schedules/cancels a daily 9 AM
-              local notification on Android. Preference is persisted on web so it
-              takes effect when the Android build is installed. */}
           <Card>
             <Row
               label="Notifications"
               sublabel="Alert me when today's wallpaper drops"
-              noBorder
               right={
                 <Switch
                   checked={settings.notifications}
                   onCheckedChange={handleNotificationsChange}
+                  disabled={notificationBusy}
                 />
               }
             />
+            <div className="px-4 py-3.5">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-amber-300/70">
+                Dev test control
+              </p>
+              <button
+                type="button"
+                onClick={handleTestNotification}
+                disabled={notificationBusy || !settings.notifications}
+                className="mt-2.5 w-full flex items-center justify-center gap-2 rounded-xl bg-white/[0.08] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/[0.12] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {notificationBusy ? (
+                  <Loader2 size={17} className="animate-spin" />
+                ) : (
+                  <BellRing size={17} />
+                )}
+                Send test notification in 10 seconds
+              </button>
+              <p className="mt-2 text-xs leading-relaxed text-white/35">
+                Uses the current Today wallpaper. This is not the final daily scheduler.
+              </p>
+            </div>
           </Card>
 
           {/* Footer */}

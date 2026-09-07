@@ -13,9 +13,6 @@ import Favorites from "@/pages/favorites";
 import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 import RouteGuard from "@/components/layout/route-guard";
-import { useSettings } from "@/hooks/use-settings";
-import { requestAndScheduleNotification } from "@/lib/notifications";
-import { LOCAL_WALLPAPERS } from "@/data/local-wallpapers";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,7 +25,6 @@ const queryClient = new QueryClient({
 
 function NotificationBridge() {
   const [, setLocation] = useLocation();
-  const { settings } = useSettings();
 
   // Tapping a notification opens Today's Wallpaper.
   useEffect(() => {
@@ -44,15 +40,6 @@ function NotificationBridge() {
       void listenerPromise.then((l) => l.remove());
     };
   }, [setLocation]);
-
-  // Keep the rolling notification schedule fresh with real wallpaper content
-  // whenever the app is opened and notifications are enabled.
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform() || !settings.notifications) return;
-    void requestAndScheduleNotification(LOCAL_WALLPAPERS).catch((error) => {
-      console.error("[wallpaper] Notification scheduling failed", { error });
-    });
-  }, [settings.notifications]);
 
   return null;
 }
