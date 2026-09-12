@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { MobileContainer } from "@/components/layout/mobile-container";
 import { Switch } from "@/components/ui/switch";
@@ -15,6 +15,12 @@ import {
   scheduleTestNotification,
 } from "@/lib/notifications";
 import { useWallpaperFeed } from "@/hooks/use-wallpaper-feed";
+
+type NotificationPermissionStatus =
+  | "checking"
+  | "allowed"
+  | "blocked"
+  | "android-only";
 
 function Card({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -88,22 +94,49 @@ export default function Settings() {
   const { settings, set } = useSettings();
   const { data: allWallpapers = [] } = useWallpaperFeed();
   const [notificationBusy, setNotificationBusy] = useState(false);
+  const [notificationPermission, setNotificationPermission] =
+    useState<NotificationPermissionStatus>("checking");
 
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform() || !settings.notifications) return;
-    void hasNotificationPermission()
-      .then(async (granted) => {
-        if (granted) return;
+  const reconcileNotificationPermission = useCallback(async () => {
+    if (!Capacitor.isNativePlatform()) {
+      setNotificationPermission("android-only");
+      return;
+    }
+
+    try {
+      const granted = await hasNotificationPermission();
+      setNotificationPermission(granted ? "allowed" : "blocked");
+      if (!granted && settings.notifications) {
         await cancelNotifications();
         set("notifications", false);
-      })
-      .catch((error) => {
-        console.error("[notifications] Could not reconcile notification permission", {
-          error,
-        });
-        set("notifications", false);
+      }
+    } catch (error) {
+      console.error("[notifications] Could not reconcile notification permission", {
+        error,
       });
-  }, []);
+      setNotificationPermission("blocked");
+      if (settings.notifications) {
+        await cancelNotifications().catch(() => {});
+        set("notifications", false);
+      }
+    }
+  }, [settings.notifications]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void reconcileNotificationPermission();
+      }
+    };
+
+    void reconcileNotificationPermission();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", reconcileNotificationPermission);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", reconcileNotificationPermission);
+    };
+  }, [reconcileNotificationPermission]);
 
   const handleNotificationsChange = (checked: boolean) => {
     void (async () => {
@@ -112,6 +145,7 @@ export default function Settings() {
         if (checked) {
           const { granted, native } = await requestNotificationPermission();
           if (!native) {
+            setNotificationPermission("android-only");
             toast({
               title: "Android notification setting",
               description: "Notification permission is requested in the Android app.",
@@ -119,6 +153,7 @@ export default function Settings() {
             return;
           }
           if (!granted) {
+            setNotificationPermission("blocked");
             await cancelNotifications();
             set("notifications", false);
             toast({
@@ -127,6 +162,7 @@ export default function Settings() {
             });
             return;
           }
+          setNotificationPermission("allowed");
           set("notifications", true);
           toast({
             title: "Notifications enabled",
@@ -171,6 +207,10 @@ export default function Settings() {
           10,
         );
         if (!scheduled) {
+          setNotificationPermission(
+            Capacitor.isNativePlatform() ? "blocked" : "android-only",
+          );
+          await cancelNotifications();
           set("notifications", false);
           toast({
             title: "Test notification not scheduled",
@@ -344,8 +384,40 @@ export default function Settings() {
           {/* Card 3 — Notifications */}
           <Card>
             <Row
-              label="Notifications"
-              sublabel="Alert me when today's wallpaper drops"
+              label="Android notification permission"
+              sublabel={
+                notificationPermission === "allowed"
+                  ? "Allowed in Android system settings"
+                  : notificationPermission === "blocked"
+                    ? "Blocked in Android system settings"
+                    : notificationPermission === "checking"
+                      ? "Checking Android system settings"
+                      : "Available in the Android app"
+              }
+              right={
+                <span
+                  className={cn(
+                    "rounded-full px-2.5 py-1 text-[11px] font-semibold",
+                    notificationPermission === "allowed"
+                      ? "bg-emerald-400/10 text-emerald-300"
+                      : notificationPermission === "blocked"
+                        ? "bg-red-400/10 text-red-300"
+                        : "bg-white/[0.07] text-white/45",
+                  )}
+                >
+                  {notificationPermission === "allowed"
+                    ? "Allowed"
+                    : notificationPermission === "blocked"
+                      ? "Blocked"
+                      : notificationPermission === "checking"
+                        ? "Checking"
+                        : "Android only"}
+                </span>
+              }
+            />
+            <Row
+              label="App notifications"
+              sublabel="Your preference for notifications from this app"
               right={
                 <Switch
                   checked={settings.notifications}
@@ -361,7 +433,11 @@ export default function Settings() {
               <button
                 type="button"
                 onClick={handleTestNotification}
-                disabled={notificationBusy || !settings.notifications}
+                disabled={
+                  notificationBusy ||
+                  notificationPermission !== "allowed" ||
+                  !settings.notifications
+                }
                 className="mt-2.5 w-full flex items-center justify-center gap-2 rounded-xl bg-white/[0.08] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/[0.12] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {notificationBusy ? (

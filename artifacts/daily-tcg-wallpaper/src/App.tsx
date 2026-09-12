@@ -13,6 +13,11 @@ import Favorites from "@/pages/favorites";
 import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 import RouteGuard from "@/components/layout/route-guard";
+import { useSettings } from "@/hooks/use-settings";
+import {
+  cancelNotifications,
+  hasNotificationPermission,
+} from "@/lib/notifications";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,6 +30,7 @@ const queryClient = new QueryClient({
 
 function NotificationBridge() {
   const [, setLocation] = useLocation();
+  const { settings, set } = useSettings();
 
   // Tapping a notification opens Today's Wallpaper.
   useEffect(() => {
@@ -40,6 +46,37 @@ function NotificationBridge() {
       void listenerPromise.then((l) => l.remove());
     };
   }, [setLocation]);
+
+  // If Android permission is revoked outside the app, reconcile the app's
+  // preference and pending notifications when the WebView becomes active.
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const reconcilePermission = async () => {
+      if (!settings.notifications) return;
+      try {
+        if (await hasNotificationPermission()) return;
+        await cancelNotifications();
+        set("notifications", false);
+      } catch (error) {
+        console.error("[notifications] Resume permission check failed", { error });
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void reconcilePermission();
+      }
+    };
+
+    void reconcilePermission();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", reconcilePermission);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", reconcilePermission);
+    };
+  }, [settings.notifications]);
 
   return null;
 }
