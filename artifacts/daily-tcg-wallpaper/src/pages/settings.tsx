@@ -384,40 +384,8 @@ export default function Settings() {
           {/* Card 3 — Notifications */}
           <Card>
             <Row
-              label="Android notification permission"
-              sublabel={
-                notificationPermission === "allowed"
-                  ? "Allowed in Android system settings"
-                  : notificationPermission === "blocked"
-                    ? "Blocked in Android system settings"
-                    : notificationPermission === "checking"
-                      ? "Checking Android system settings"
-                      : "Available in the Android app"
-              }
-              right={
-                <span
-                  className={cn(
-                    "rounded-full px-2.5 py-1 text-[11px] font-semibold",
-                    notificationPermission === "allowed"
-                      ? "bg-emerald-400/10 text-emerald-300"
-                      : notificationPermission === "blocked"
-                        ? "bg-red-400/10 text-red-300"
-                        : "bg-white/[0.07] text-white/45",
-                  )}
-                >
-                  {notificationPermission === "allowed"
-                    ? "Allowed"
-                    : notificationPermission === "blocked"
-                      ? "Blocked"
-                      : notificationPermission === "checking"
-                        ? "Checking"
-                        : "Android only"}
-                </span>
-              }
-            />
-            <Row
-              label="App notifications"
-              sublabel="Your preference for notifications from this app"
+              label="Notifications"
+              sublabel="Get reminders when today's wallpaper is ready."
               right={
                 <Switch
                   checked={settings.notifications}
@@ -427,9 +395,11 @@ export default function Settings() {
               }
             />
             <div className="px-4 py-3.5">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-amber-300/70">
-                Dev test control
-              </p>
+              {notificationPermission === "blocked" && (
+                <p className="mb-3 rounded-lg bg-red-400/[0.08] px-3 py-2 text-xs leading-relaxed text-red-200/80">
+                  Notifications are blocked in Android settings.
+                </p>
+              )}
               <button
                 type="button"
                 onClick={handleTestNotification}
@@ -438,16 +408,16 @@ export default function Settings() {
                   notificationPermission !== "allowed" ||
                   !settings.notifications
                 }
-                className="mt-2.5 w-full flex items-center justify-center gap-2 rounded-xl bg-white/[0.08] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/[0.12] disabled:cursor-not-allowed disabled:opacity-40"
+                className="w-full flex items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 text-sm font-medium text-white/70 transition-colors hover:bg-white/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-35"
               >
                 {notificationBusy ? (
                   <Loader2 size={17} className="animate-spin" />
                 ) : (
                   <BellRing size={17} />
                 )}
-                Send test notification in 10 seconds
+                Dev test · Send in 10 seconds
               </button>
-              <p className="mt-2 text-xs leading-relaxed text-white/35">
+              <p className="mt-2 text-center text-[11px] leading-relaxed text-white/30">
                 Uses the current Today wallpaper. This is not the final daily scheduler.
               </p>
             </div>
