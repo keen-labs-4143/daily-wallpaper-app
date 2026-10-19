@@ -1,47 +1,15 @@
 import { Capacitor } from "@capacitor/core";
 import { LocalNotifications } from "@capacitor/local-notifications";
+import type { WallpaperRecord } from "@/lib/wallpaper";
 import {
-  selectWallpaperForDate,
-  type WallpaperRecord,
-} from "@/lib/wallpaper";
+  getCurrentNotificationContent,
+  type NotificationContent,
+} from "./notification-content";
+export { getCurrentNotificationContent } from "./notification-content";
 
 const TEST_NOTIFICATION_ID = 9001;
 const LEGACY_DAILY_BASE_ID = 1001;
 const LEGACY_DAILY_COUNT = 14;
-const GENERIC_TITLE = "Today's wallpaper is ready";
-const GENERIC_BODY = "Open Daily TCG Wallpaper to see today's selection.";
-
-export interface NotificationContent {
-  title: string;
-  body: string;
-  wallpaperId: number | null;
-}
-
-function formatBody(wallpaper: WallpaperRecord): string {
-  return [wallpaper.description, wallpaper.credit]
-    .filter((line) => line.trim())
-    .join("\n");
-}
-
-export function getCurrentNotificationContent(
-  wallpapers: WallpaperRecord[],
-  date = new Date(),
-): NotificationContent {
-  const wallpaper = selectWallpaperForDate(wallpapers, date);
-  if (!wallpaper) {
-    return {
-      title: GENERIC_TITLE,
-      body: GENERIC_BODY,
-      wallpaperId: null,
-    };
-  }
-
-  return {
-    title: wallpaper.title,
-    body: formatBody(wallpaper),
-    wallpaperId: wallpaper.id,
-  };
-}
 
 export async function requestNotificationPermission(): Promise<{
   granted: boolean;

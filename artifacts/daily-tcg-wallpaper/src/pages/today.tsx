@@ -14,6 +14,7 @@ import {
 } from "@/lib/wallpaper";
 import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DEVELOPER_TOOLS_ENABLED } from "@/lib/developer-tools";
 
 type Tab = "week" | "collection";
 
@@ -85,6 +86,14 @@ export default function Today() {
                 )}
               </button>
             ))}
+            {DEVELOPER_TOOLS_ENABLED && (
+              <button
+                onClick={() => setLocation("/dev-tools")}
+                className="ml-auto pb-3 text-[11px] text-white/35 hover:text-white/70"
+              >
+                Dev tools
+              </button>
+            )}
           </div>
         </div>
         </div>

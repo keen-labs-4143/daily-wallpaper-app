@@ -1,0 +1,46 @@
+# Phase 6: Real Developer Testing Controls
+
+Important: The purpose of Phase 6 is to verify the existing Phase 5 functionality, not create mock demonstrations of it.
+
+**Do not implement fake test results, hardcoded successful outcomes, or separate mock wallpaper selection logic.**
+
+Requirements:
+
+1. Create a developer-only testing panel that is hidden from normal users and disabled in production builds.
+
+2. Implement a shared clock/date override that feeds into the actual Phase 5 wallpaper selection function.
+
+3. The Yesterday, Today, and Tomorrow controls must change the date used by the real application logic, not merely change text displayed in the developer panel.
+
+4. The actual Today/Home screen must update when an override is applied. Preview and notification content selection must use the same effective date.
+
+5. Display real diagnostic information read from application state:
+   - Actual device date
+   - Effective test date
+   - Selected wallpaper ID
+   - Selected wallpaper title
+   - Selected wallpaper's dateAvailable
+   - Whether the selection is eligible
+   - Reason for selection or fallback
+
+6. If no wallpaper is scheduled for the simulated date, display the actual fallback behavior. Do not invent a successful result or wallpaper.
+
+7. Do not modify the wallpaper feed or create fake wallpapers merely to make the tests pass.
+
+8. Provide a Clear Override action that restores the device's real date and normal selection behavior.
+
+9. Add automated tests that call the real selection function using fixed dates and assert the expected wallpaper IDs from known feed records. A success message alone is not an acceptable test.
+
+10. The Send Test Notification action must use the actual notification-building code and the wallpaper selected by the effective test date.
+
+11. Clearly distinguish tests of foreground app selection from Android background scheduling. Phase 6 does not prove WorkManager or automatic wallpaper changes are working.
+
+12. Explain which real functions the developer controls invoke, and identify the files implementing those functions.
+
+**Acceptance test:**
+
+Select Tomorrow, navigate away from the developer panel, and verify that Today/Home actually displays the wallpaper selected for that date. Then clear the override and verify that the original current wallpaper returns.
+
+If tomorrow has no new wallpaper scheduled, the current wallpaper should legitimately remain unchanged. The diagnostic panel must show why.
+
+Do not redesign the app or implement background wallpaper automation.

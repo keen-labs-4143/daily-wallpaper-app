@@ -14,3 +14,9 @@ Phase 5 concerns foreground local-date selection consistency only, not native ba
 **Why:** The user explicitly reserved these capabilities for separate phases.
 
 **How to apply:** Refresh in-app data on date changes and resume without adding native wallpaper application, background scheduling, or new developer controls.
+
+For Phase 6 developer testing, use actual feed records and the real selection/notification paths. Never retime the production feed or fabricate successful results to make date tests appear to pass.
+
+**Why:** The user explicitly requires real tests, and the current feed can legitimately return the same final release for yesterday, today, and tomorrow after its schedule ends.
+
+**How to apply:** Offer covered custom dates and Clear Override in developer builds only. Distinguish browser/unit evidence from Android lifecycle and native-delivery verification.

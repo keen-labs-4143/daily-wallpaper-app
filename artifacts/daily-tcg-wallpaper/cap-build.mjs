@@ -16,7 +16,13 @@ const buildEnv = {
 };
 
 try {
-  execSync("pnpm run build", { cwd: root, env: buildEnv, stdio: "inherit" });
+  const developer = process.argv.includes("--developer");
+  console.log(developer
+    ? "[cap:build] DEVELOPER BUNDLE — date overrides enabled; do not publish."
+    : "[cap:build] Release bundle — developer controls and overrides disabled.");
+  execSync(developer ? "pnpm run build:developer" : "pnpm run build", {
+    cwd: root, env: buildEnv, stdio: "inherit",
+  });
   execSync("cap sync android", { cwd: root, env: buildEnv, stdio: "inherit" });
 
   const feed = JSON.parse(

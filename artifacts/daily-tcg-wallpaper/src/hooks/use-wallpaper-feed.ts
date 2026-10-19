@@ -13,7 +13,7 @@ export function useWallpaperFeed(): {
 } {
   useSyncExternalStore(localDateStore.subscribe, localDateStore.getSnapshot);
   return {
-    data: getAvailableWallpapers(LOCAL_WALLPAPERS),
+    data: getAvailableWallpapers(LOCAL_WALLPAPERS, localDateStore.getEffectiveDate()),
     isLoading: false,
     error: null,
   };

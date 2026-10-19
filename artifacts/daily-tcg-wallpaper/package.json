@@ -7,12 +7,14 @@
     "dev": "vite --config vite.config.ts --host 0.0.0.0",
     "validate:wallpapers": "node scripts/validate-wallpaper-feed.mjs",
     "build": "pnpm run validate:wallpapers && vite build --config vite.config.ts",
+    "build:developer": "pnpm run validate:wallpapers && vite build --config vite.config.ts --mode developer",
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:wallpapers": "node --test tests/*.test.mjs",
     "cap:sync": "cap sync android",
     "cap:open": "cap open android",
-    "cap:build": "node cap-build.mjs"
+    "cap:build": "node cap-build.mjs",
+    "cap:build:developer": "node cap-build.mjs --developer"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.4.0",

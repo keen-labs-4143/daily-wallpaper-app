@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Capacitor } from "@capacitor/core";
@@ -13,6 +13,7 @@ import Favorites from "@/pages/favorites";
 import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 import RouteGuard from "@/components/layout/route-guard";
+import { DEVELOPER_TOOLS_ENABLED } from "@/lib/developer-tools";
 import { useSettings } from "@/hooks/use-settings";
 import {
   cancelNotifications,
@@ -27,6 +28,11 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Lazy and build-gated: the panel is not included in the release bundle.
+const DeveloperTools = DEVELOPER_TOOLS_ENABLED
+  ? lazy(() => import("@/pages/developer-tools"))
+  : null;
 
 function NotificationBridge() {
   const [, setLocation] = useLocation();
@@ -92,6 +98,13 @@ function Router() {
         <Route path="/preview/:id" component={Preview} />
         <Route path="/favorites" component={Favorites} />
         <Route path="/settings" component={Settings} />
+        {DeveloperTools && (
+          <Route path="/dev-tools">
+            <Suspense fallback={<p className="p-6 text-white/50">Loading developer controls…</p>}>
+              <DeveloperTools />
+            </Suspense>
+          </Route>
+        )}
         <Route component={NotFound} />
       </Switch>
     </>
