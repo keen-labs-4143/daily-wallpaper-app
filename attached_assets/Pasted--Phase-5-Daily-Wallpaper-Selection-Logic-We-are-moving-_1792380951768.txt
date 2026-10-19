@@ -1,0 +1,112 @@
+# Phase 5: Daily Wallpaper Selection Logic
+
+We are moving into Phase 5 of our Android Daily Wallpaper app build plan.
+
+**Current project status:**
+- Phase 3: The local wallpaper feed is working on Android, with 14 bundled wallpaper images and their metadata.
+- Phase 4: Notification content is working on Android and uses the current wallpaper from the local feed.
+- The Phase 4 notification Settings UI was recently simplified to remove technical clutter. Preserve those improvements.
+- Today, Preview, Favorites, and Notifications should already use the same local wallpaper feed.
+- Some daily wallpaper selection logic already exists. Inspect and reuse it rather than rewriting unnecessarily.
+
+**Goal:**
+
+Make sure the app reliably selects the correct wallpaper for the current day, automatically updates its selection when the date changes, and maintains consistency across all screens and notification content.
+
+## 1. Daily wallpaper selection
+
+Use this rule:
+
+**Today's Wallpaper = the newest published wallpaper where `dateAvailable <= the device's current local date`.**
+
+Requirements:
+- Only select wallpapers with `isPublished === true`.
+- Never select a future-dated wallpaper as Today's Wallpaper.
+- If no wallpaper is scheduled for the exact current date, use the newest eligible earlier wallpaper.
+- If no eligible wallpaper exists, show a clean fallback state.
+- Never display "Invalid Date."
+- Use the device's local calendar date rather than UTC for determining Today.
+- If multiple wallpapers share the same date, use a deterministic tie-breaker, such as wallpaper ID.
+
+## 2. Keep wallpaper selection consistent
+
+Verify that the same current wallpaper is used by:
+- Today/Home
+- Preview when opened from Today
+- Favorites when saving the current wallpaper
+- Notification content
+- Any other component displaying Today's Wallpaper
+
+Use one shared selection helper rather than duplicating date-selection logic across components.
+
+Do not modify the existing notification permission behavior or the recently cleaned-up Settings UI.
+
+## 3. Handle date changes
+
+The app should recognize when the device's local date changes.
+
+Requirements:
+- When the app opens, select the correct wallpaper for the current date.
+- When the app returns from the background, recheck the current date and refresh the selection if necessary.
+- If the app remains open across midnight, refresh the selection without requiring the user to restart it.
+- Make sure the selection respects local timezone boundaries.
+- Do not implement a full native background scheduler or automatic wallpaper application yet.
+
+## 4. Upcoming wallpapers
+
+Verify that This Week and Our Collection handle upcoming wallpapers appropriately.
+
+- Future wallpapers must not become Today's Wallpaper prematurely.
+- Preserve the current collection UI wherever possible.
+- Avoid accidentally revealing future scheduled wallpapers as already released if the current UI distinguishes published and upcoming content.
+- Do not redesign the screens.
+
+## 5. Testing and validation
+
+Please add or update unit tests for:
+- Today's exact-date wallpaper.
+- Missing exact-date wallpaper.
+- Future-dated wallpapers.
+- Unpublished wallpapers.
+- Invalid or missing dates.
+- Multiple wallpapers with the same date.
+- Local timezone boundaries.
+- Date changes while the app is open or resumed.
+
+If appropriate, add lightweight diagnostic logging to help identify selection problems.
+
+**Do not build the full developer testing panel yet. That belongs to Phase 6.**
+
+## 6. Scope restrictions
+
+Do not:
+- Redesign the app.
+- Change the Phase 4 notification Settings UI.
+- Change notification permission logic.
+- Implement native background auto-wallpaper updates.
+- Implement manual Set Wallpaper.
+- Build a hosted wallpaper feed.
+- Add monetization.
+- Add collection filters or separate niche feeds.
+- Work on Community.
+
+## 7. Deliverables
+
+Before coding, inspect the existing implementation and explain:
+1. Which Phase 5 requirements are already working.
+2. Which behaviors are missing or unreliable.
+3. Which files need changes.
+4. The smallest implementation plan that satisfies this phase.
+
+After approval and implementation:
+- Run typecheck and build.
+- Validate the local wallpaper feed.
+- Confirm the Capacitor Android assets are synchronized.
+- Explain what changed.
+- Give me a concise Android testing checklist.
+
+**Phase 5 checkpoint:**
+
+"When the device's local date changes, Today's Wallpaper changes to the correct scheduled wallpaper, and the rest of the app stays consistent."
+
+Do not begin implementation until I approve the plan.
