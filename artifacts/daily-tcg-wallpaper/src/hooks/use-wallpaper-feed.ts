@@ -1,3 +1,5 @@
+import { useSyncExternalStore } from "react";
+import { localDateStore } from "@/lib/local-date-store";
 import { LOCAL_WALLPAPERS } from "@/data/local-wallpapers";
 import {
   getAvailableWallpapers,
@@ -9,6 +11,7 @@ export function useWallpaperFeed(): {
   isLoading: boolean;
   error: unknown;
 } {
+  useSyncExternalStore(localDateStore.subscribe, localDateStore.getSnapshot);
   return {
     data: getAvailableWallpapers(LOCAL_WALLPAPERS),
     isLoading: false,

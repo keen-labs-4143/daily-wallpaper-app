@@ -1,0 +1,1 @@
+- [Phased Android scope](phased-android-scope.md) — preserve the simplified notification Settings UI; foreground date refresh is distinct from native background wallpaper updates.

@@ -169,7 +169,9 @@ export function getAvailableWallpapers(
   return wallpapers
     .filter(
       (wallpaper) =>
-        wallpaper.isPublished && wallpaper.dateAvailable <= localDate,
+        wallpaper.isPublished === true &&
+        isValidWallpaperDate(wallpaper.dateAvailable) &&
+        wallpaper.dateAvailable <= localDate,
     )
     .sort(compareWallpaperDates);
 }

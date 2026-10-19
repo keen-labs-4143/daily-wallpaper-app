@@ -9,6 +9,7 @@
     "build": "pnpm run validate:wallpapers && vite build --config vite.config.ts",
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:wallpapers": "node --test tests/*.test.mjs",
     "cap:sync": "cap sync android",
     "cap:open": "cap open android",
     "cap:build": "node cap-build.mjs"

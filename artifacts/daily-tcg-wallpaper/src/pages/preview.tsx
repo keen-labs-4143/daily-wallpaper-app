@@ -49,7 +49,6 @@ export default function Preview() {
   const { isFavorite, toggleFavorite } = useFavorites();
   const { toast } = useToast();
 
-  const [currentIndex, setCurrentIndex] = useState(-1);
   const [direction, setDirection] = useState(0);
   const [heartAnimating, setHeartAnimating] = useState(false);
   const [setWallpaperOpen, setSetWallpaperOpen] = useState(false);
@@ -58,13 +57,8 @@ export default function Preview() {
 
   const displayWallpapers = allWallpapers;
 
-  // Sync index from URL once wallpapers are loaded
-  useEffect(() => {
-    if (displayWallpapers.length && urlId) {
-      const idx = displayWallpapers.findIndex((w) => w.id === urlId);
-      if (idx >= 0 && currentIndex === -1) setCurrentIndex(idx);
-    }
-  }, [displayWallpapers.length, urlId, currentIndex]);
+  // Resolve by stable ID: new releases can shift every archive index.
+  const currentIndex = displayWallpapers.findIndex((wallpaper) => wallpaper.id === urlId);
 
   const wallpaper = currentIndex >= 0 ? displayWallpapers[currentIndex] : undefined;
   useEffect(() => {
@@ -75,7 +69,6 @@ export default function Preview() {
     const next = currentIndex + dir;
     if (next < 0 || next >= displayWallpapers.length) return;
     setDirection(dir);
-    setCurrentIndex(next);
     setLocation(`/preview/${displayWallpapers[next].id}`, { replace: true } as never);
   };
 
