@@ -94,7 +94,7 @@ export default function DeveloperTools() {
         <h1 className="text-xl font-bold text-white">Developer date testing</h1>
         <p className="text-xs leading-relaxed text-amber-200/70">
           Developer build only. Foreground selection testing—not WorkManager, background scheduling, or automatic wallpaper application.
-          Overrides last for this app session only.
+          Overrides survive background/resume and app restarts until Clear Override. Developer builds only.
         </p>
 
         <section className="rounded-2xl bg-[#1c1c20] p-4 space-y-3">

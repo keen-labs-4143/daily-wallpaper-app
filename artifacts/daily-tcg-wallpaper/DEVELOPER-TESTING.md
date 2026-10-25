@@ -14,10 +14,11 @@
 4. Open the app, finish onboarding if shown, then open the Today menu → **Settings** → **Developer tools**, the first card. Alternatively, tap **Dev tools** to the right of the Today tabs.
 5. The screen heading is **Developer date testing**. The Phase 4 notification test button is not the entry to this panel.
 
-An Android Studio **debug** APK does not automatically enable these web controls: the Vite bundle must have been built with `cap:build:developer`. `build:developer` alone builds web assets but does not sync them to Android. Do not run normal `cap:build` or normal `build` + `cap:sync` between creating the developer bundle and building/installing the APK; that replaces it with release web assets. Avoid building/syncing during a browser acceptance test, since a development-page reload clears the intentionally session-only override.
+An Android Studio **debug** APK does not automatically enable these web controls: the Vite bundle must have been built with `cap:build:developer`. `build:developer` alone builds web assets but does not sync them to Android. Do not run normal `cap:build` or normal `build` + `cap:sync` between creating the developer bundle and building/installing the APK; that replaces it with release web assets. Avoid building/syncing during a browser acceptance test because development-page reloads interrupt the flow.
 
 If neither developer entry appears, the installed app does not show the expected developer bundle. Check the command output, Android project path, and that you installed the newly rebuilt APK, not an older APK. No uninstall or clearing app data is required.
-- Overrides exist only in memory. Navigating within the app preserves them; reloading or restarting the app clears them. No stored override can affect a release build.
+- Developer overrides are retained in local storage until **Clear Override**, including background/resume, page reload, WebView recreation, and app restart. Dates are validated before restoration; malformed values are removed. A normal release build never reads or activates a retained override and removes the developer storage key on startup.
+- Applying or clearing a date reports a storage error rather than falsely claiming success if storage is unavailable. Startup still falls back safely to the real date if retained state cannot be read.
 - The simplified Settings UI and its permission flow are unchanged.
 
 ## Actual code paths
@@ -46,3 +47,18 @@ Automated Node tests invoke the real selector with the unchanged feed, and drive
 They do not prove Android WebView lifecycle delivery or native notification delivery. With overrides cleared, use a test device clock near midnight on September 5, 2026 and verify the foreground transition from ID 105 to ID 106. Separately background the app, advance to September 9, and resume: expect ID 109. Restore automatic date/time afterward.
 
 No WorkManager job, background scheduler, or automatic wallpaper application is implemented or verified here.
+
+## Resume regression and focused Pixel retest
+
+The old store initialized its override to `null` every time JavaScript started. Normal visibility/focus resume callbacks already used the effective date and did not clear an active override, but a recreated WebView/store lost it. Automated tests reproduce this recreation boundary; they do not establish whether the original Pixel run recreated its WebView.
+
+The store now restores a validated developer-only date before its initial snapshot, persists each applied override, and deletes it on Clear Override. The selector, notification builder, permission flow, and Android activity are unchanged.
+
+1. Install the newly built developer bundle. Open **Settings → Developer tools**, select **2026-09-01**, and verify actual Today shows **101 — Void Between Stars**.
+2. Put the app in the background, open another app, and return. Confirm Today, Preview, and developer diagnostics still use September 1 / ID 101. Repeat with **2026-09-06 / ID 106**.
+3. With Notifications enabled and Android permission granted, schedule the real test notification after returning. Compare title, caption, and credit with the selected record.
+4. Close/reopen the app as an additional recreation check: the override should still be active.
+5. Select **Clear Override**. Confirm the effective date equals the current local device date and the real eligible selection returns. Background/resume and reopen again; the override must remain cleared.
+6. With no override, repeat the real-device date-change/resume check above. Normal release builds must expose no developer controls and must ignore/remove any date previously retained by a developer build.
+
+Node regression tests cover active-override resume, changed real dates, store recreation, Clear Override followed by recreation, malformed dates, and developer → release → developer storage isolation using the unchanged real feed. Native Android lifecycle and notification delivery still require the Pixel checks.
