@@ -20,3 +20,9 @@ For Phase 6 developer testing, use actual feed records and the real selection/no
 **Why:** The user explicitly requires real tests, and the current feed can legitimately return the same final release for yesterday, today, and tomorrow after its schedule ends.
 
 **How to apply:** Offer covered custom dates and Clear Override in developer builds only. Distinguish browser/unit evidence from Android lifecycle and native-delivery verification.
+
+Developer date overrides must remain active through Android background/resume until the user explicitly selects Clear Override; production builds must never retain or activate them.
+
+**Why:** The user reported that the previous memory-only lifetime lost the date on Pixel resume and explicitly requires retaining it until Clear Override.
+
+**How to apply:** Treat a resume or WebView recreation as distinct from clearing the override. Keep any retention developer-only and preserve real-date refresh when no override is active.
