@@ -5,7 +5,7 @@
  * build intentionally does not require a remote API origin.
  */
 import { execSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 
 const root = import.meta.dirname;
@@ -15,6 +15,27 @@ const buildEnv = {
   BASE_PATH: "/",
 };
 
+function verifyDeveloperBundle(publicDirectory, developer) {
+  const assetsDirectory = resolve(publicDirectory, "assets");
+  const files = readdirSync(assetsDirectory).filter((name) => name.endsWith(".js"));
+  const hasPanel = files.some((name) => name.startsWith("developer-tools-"));
+  const hasSettingsEntry = files.some((name) =>
+    readFileSync(resolve(assetsDirectory, name), "utf8")
+      .includes("open-developer-tools"),
+  );
+  if (hasPanel !== developer || hasSettingsEntry !== developer) {
+    throw new Error(
+      `Developer bundle verification failed in ${publicDirectory}. ` +
+      `Expected developer controls ${developer ? "included" : "excluded"}; ` +
+      `panel=${hasPanel}, Settings entry=${hasSettingsEntry}.`,
+    );
+  }
+  console.log(
+    `[cap:build] Verified developer panel and Settings entry ` +
+    `${developer ? "INCLUDED" : "EXCLUDED"} in ${publicDirectory}.`,
+  );
+}
+
 try {
   const developer = process.argv.includes("--developer");
   console.log(developer
@@ -23,7 +44,9 @@ try {
   execSync(developer ? "pnpm run build:developer" : "pnpm run build", {
     cwd: root, env: buildEnv, stdio: "inherit",
   });
+  verifyDeveloperBundle(resolve(root, "dist/public"), developer);
   execSync("cap sync android", { cwd: root, env: buildEnv, stdio: "inherit" });
+  verifyDeveloperBundle(resolve(root, "android/app/src/main/assets/public"), developer);
 
   const feed = JSON.parse(
     readFileSync(resolve(root, "src/data/wallpapers.json"), "utf8"),

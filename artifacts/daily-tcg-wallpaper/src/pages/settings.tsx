@@ -15,6 +15,7 @@ import {
   scheduleTestNotification,
 } from "@/lib/notifications";
 import { useWallpaperFeed } from "@/hooks/use-wallpaper-feed";
+import { DEVELOPER_TOOLS_ENABLED } from "@/lib/developer-tools";
 
 type NotificationPermissionStatus =
   | "checking"
@@ -254,6 +255,21 @@ export default function Settings() {
         </div>
 
         <div className="px-4 space-y-3">
+
+          {DEVELOPER_TOOLS_ENABLED && (
+            <Card>
+              <button
+                onClick={() => setLocation("/dev-tools")}
+                className="w-full px-4 py-3.5 text-left hover:bg-white/[0.04] transition-colors"
+                data-testid="open-developer-tools"
+              >
+                <span className="block text-white font-medium text-[15px]">Developer tools</span>
+                <span className="block text-white/45 text-xs mt-0.5">
+                  Developer bundle · Phase 6 date testing
+                </span>
+              </button>
+            </Card>
+          )}
 
           {/* Card 1 — Wallpaper update settings */}
           <Card>
