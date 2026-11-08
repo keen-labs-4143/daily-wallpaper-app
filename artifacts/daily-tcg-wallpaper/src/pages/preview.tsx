@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRoute, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { MobileContainer } from "@/components/layout/mobile-container";
@@ -9,7 +9,8 @@ import { cn } from "@/lib/utils";
 import { Share } from "@capacitor/share";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
-import { isSetWallpaperSupported, setWallpaper } from "@/lib/wallpaper-native";
+import { setWallpaper } from "@/lib/wallpaper-native";
+import { WALLPAPER_TARGETS, type WallpaperTarget } from "@/lib/wallpaper-setting";
 import { formatWallpaperDate } from "@/lib/wallpaper";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useWallpaperFeed } from "@/hooks/use-wallpaper-feed";
@@ -53,6 +54,8 @@ export default function Preview() {
   const [heartAnimating, setHeartAnimating] = useState(false);
   const [setWallpaperOpen, setSetWallpaperOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSetting, setIsSetting] = useState(false);
+  const settingInFlight = useRef(false);
   const [imageFailed, setImageFailed] = useState(false);
 
   const displayWallpapers = allWallpapers;
@@ -125,23 +128,33 @@ export default function Preview() {
     }
   };
 
-  const handleSet = () => setSetWallpaperOpen(true);
+  const handleSet = () => {
+    if (wallpaper && !settingInFlight.current) setSetWallpaperOpen(true);
+  };
 
-  const handleSetTarget = (target: string) => {
-    setSetWallpaperOpen(false);
-    if (Capacitor.isNativePlatform()) {
-      if (isSetWallpaperSupported()) {
-        // SetWallpaperPlugin is installed — attempt native set
-        void setWallpaper(wallpaper?.imageUrl ?? "", target as "home" | "lock" | "both")
-          .then(() => toast({ title: "Wallpaper set", description: `Applied to ${target}.` }))
-          .catch(() => toast({ title: "Could not set wallpaper", description: "Please try again.", variant: "destructive" }));
-      } else {
-        // TODO: Remove once SetWallpaperPlugin is registered in MainActivity.java
-        // See lib/wallpaper-native.ts for implementation instructions.
-        toast({ title: "Coming soon", description: "Native wallpaper setting is in development." });
-      }
-    } else {
-      toast({ title: "Wallpaper set", description: `Applied to ${target}.` });
+  const handleSetTarget = async (target: WallpaperTarget) => {
+    if (!wallpaper || settingInFlight.current) return;
+    settingInFlight.current = true;
+    setIsSetting(true);
+    try {
+      // Capture the selected record's original asset, not a date-based reselection
+      // or the scaled image shown by the Preview element.
+      await setWallpaper(wallpaper.imagePath, target);
+      setSetWallpaperOpen(false);
+      toast({
+        title: "Wallpaper set",
+        description: WALLPAPER_TARGETS.find(option => option.value === target)?.success,
+      });
+    } catch (error) {
+      console.error("[wallpaper] Native apply failed", { id: wallpaper.id, target, error });
+      toast({
+        title: "Could not set wallpaper",
+        description: error instanceof Error ? error.message : "Android could not apply the wallpaper. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      settingInFlight.current = false;
+      setIsSetting(false);
     }
   };
 
@@ -338,10 +351,11 @@ export default function Preview() {
           <div className="flex border-t border-white/10 bg-black/70 backdrop-blur-2xl">
             <button
               onClick={handleSet}
-              className="flex-1 flex items-center justify-center gap-2 py-5 text-white/90 font-semibold text-[15px] hover:bg-white/5 transition-colors active:bg-white/10 border-r border-white/10"
+              disabled={!wallpaper || isSetting}
+              className="flex-1 flex items-center justify-center gap-2 py-5 text-white/90 font-semibold text-[15px] hover:bg-white/5 transition-colors active:bg-white/10 border-r border-white/10 disabled:opacity-60"
             >
-              <Smartphone size={17} />
-              Set wallpaper
+              {isSetting ? <Loader2 size={17} className="animate-spin" /> : <Smartphone size={17} />}
+              {isSetting ? "Applying…" : "Set wallpaper"}
             </button>
             <button
               onClick={handleSave}
@@ -369,7 +383,7 @@ export default function Preview() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.18 }}
                 className="absolute inset-0 z-30 bg-black/40"
-                onClick={() => setSetWallpaperOpen(false)}
+                onClick={() => { if (!isSetting) setSetWallpaperOpen(false); }}
               />
               <motion.div
                 key="swcard"
@@ -379,32 +393,35 @@ export default function Preview() {
                 transition={{ type: "spring", stiffness: 380, damping: 32 }}
                 className="absolute z-40 inset-x-6 rounded-2xl bg-[#3a3a3e]/90 backdrop-blur-2xl p-5 shadow-2xl"
                 style={{ top: "38%" }}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Set wallpaper"
+                aria-busy={isSetting}
               >
                 <div className="flex items-center justify-between mb-5">
                   <p className="text-white font-semibold text-[17px]">Set wallpaper</p>
                   <button
                     onClick={() => setSetWallpaperOpen(false)}
-                    className="w-7 h-7 flex items-center justify-center rounded-full text-white/60 hover:text-white transition-colors"
+                    disabled={isSetting}
+                    className="w-7 h-7 flex items-center justify-center rounded-full text-white/60 hover:text-white transition-colors disabled:opacity-40"
                     aria-label="Close"
                   >
                     <X size={18} />
                   </button>
                 </div>
                 <div className="flex flex-col gap-3">
-                  {[
-                    { label: "Home Screen",  value: "Home Screen" },
-                    { label: "Lock Screen",  value: "Lock Screen" },
-                    { label: "Both Screens", value: "Home Screen and Lock Screen" },
-                  ].map(({ label, value }) => (
+                  {WALLPAPER_TARGETS.map(({ label, value }) => (
                     <button
                       key={label}
-                      onClick={() => handleSetTarget(value)}
-                      className="w-full py-3.5 rounded-full bg-[#1c1c22] text-white font-semibold text-[15px] hover:bg-[#26262e] active:scale-[0.97] transition-all"
+                      onClick={() => void handleSetTarget(value)}
+                      disabled={isSetting}
+                      className="w-full py-3.5 rounded-full bg-[#1c1c22] text-white font-semibold text-[15px] hover:bg-[#26262e] active:scale-[0.97] transition-all disabled:opacity-50"
                     >
                       {label}
                     </button>
                   ))}
                 </div>
+                {isSetting && <p role="status" className="mt-3 text-center text-xs text-white/60">Applying full-resolution wallpaper…</p>}
               </motion.div>
             </>
           )}

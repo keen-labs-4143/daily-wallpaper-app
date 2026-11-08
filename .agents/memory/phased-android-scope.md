@@ -26,3 +26,9 @@ Developer date overrides must remain active through Android background/resume un
 **Why:** The user reported that the previous memory-only lifetime lost the date on Pixel resume and explicitly requires retaining it until Clear Override.
 
 **How to apply:** Treat a resume or WebView recreation as distinct from clearing the override. Keep any retention developer-only and preserve real-date refresh when no override is active.
+
+Phase 7 explicitly allows manual native Home/Lock/Both wallpaper setting. The native operation must be reusable by future Phase 10 automatic updates, but background scheduling remains out of scope.
+
+**Why:** The user explicitly requested the reusable-service boundary rather than a manual-only Activity implementation.
+
+**How to apply:** Keep native wallpaper application independent of Capacitor and screen UI. Add no automatic/background caller until that phase is requested.
